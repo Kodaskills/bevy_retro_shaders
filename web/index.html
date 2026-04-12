@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bevy Retro Shaders — Kodaskills</title>
+    <!-- Web Demo -->
+    <link data-trunk rel="rust" href="../Cargo.toml" data-bin="crt_example_web" data-wasm-opt="z" data-cargo-features="jpeg" />
+    <link data-trunk rel="copy-dir" href="../examples/assets" />
+    <link data-trunk rel="css" href="assets/css/style.css" />
+    <script data-trunk src="assets/js/main.js"></script>
+
+    <!-- Google Fonts: Inter + Space Grotesk -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+</head>
+<body class="page-index" data-bevy-event="BevyAppReady">
+    <div class="page-wrapper">
+        <!-- ═══ HEADER ═══ -->
+        <header class="header">
+            <div class="header-content">
+                <a target="_blank" rel="noopener noreferrer" href="https://kodaskills.co" class="logo">Kodaskills</a>
+
+                <nav class="nav">
+                    <a href="#features" class="nav-link">01 Features</a>
+                    <span class="nav-dot">•</span>
+                    <a href="#controls" class="nav-link">02 Controls</a>
+                    <span class="nav-dot">•</span>
+                    <a href="#demo" class="nav-link">03 Demo</a>
+                </nav>
+
+                <div class="header-actions">
+                    <a target="_blank" rel="noopener noreferrer" href="https://github.com/kodaskills/bevy_retro_shaders" class="theme-toggle" aria-label="GitHub">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width: 20px; height: 20px;">
+                            <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                        </svg>
+                    </a>
+                    <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+                        <svg id="moonIcon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                        </svg>
+                        <svg id="sunIcon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="display: none;">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
+                    </button>
+                    <a target="_blank" rel="noopener noreferrer" href="https://crates.io/crates/bevy_retro_shaders" class="btn btn-primary">
+                        <svg viewBox="0 0 24 24"><path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4zM6 18.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm13.5-9l1.96 2.5H17V9.5h2.5zm-1.5 9c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
+                        Get Crate
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <!-- ═══ MAIN ═══ -->
+        <main class="main">
+            <!-- ═══ HERO ═══ -->
+            <section class="hero">
+                <div class="hero-content">
+                    <div class="hero-text">
+                        <div class="hero-badge">
+                            <span class="hero-badge-dot"></span>
+                            <span class="hero-badge-text">Bevy 0.18+ • WebAssembly</span>
+                        </div>
+
+                        <h1 class="hero-title">
+                            BEVY <span class="hero-title-accent">RETRO</span> SHADERS
+                        </h1>
+
+                        <p class="hero-subtitle">
+                            Retro post-processing shaders for Bevy — CRT curvature, scanlines, chromatic aberration, vignette, and glitch effects. Works on Camera2d and Camera3d.
+                        </p>
+
+                        <div class="hero-actions">
+                            <a href="#demo" class="btn btn-primary">
+                                <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                                Try Demo
+                            </a>
+                            <a target="_blank" rel="noopener noreferrer" href="https://github.com/kodaskills/bevy_retro_shaders" class="btn btn-outlined-primary">
+                                <svg viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                                View on GitHub
+                            </a>
+                            <a target="_blank" rel="noopener noreferrer" href="https://crates.io/crates/bevy_retro_shaders" class="btn btn-outlined">
+                                <svg viewBox="0 0 24 24"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/></svg>
+                                crates.io
+                            </a>
+                        </div>
+
+                        <div class="hero-meta">
+                            <div class="hero-meta-item">
+                                <span class="hero-meta-label">Version</span>
+                                <span class="hero-meta-value">0.1.0</span>
+                            </div>
+                            <div class="hero-meta-item">
+                                <span class="hero-meta-label">License</span>
+                                <span class="hero-meta-value">MIT</span>
+                            </div>
+                            <div class="hero-meta-item">
+                                <span class="hero-meta-label">Repository</span>
+                                <span class="hero-meta-value"><a target="_blank" rel="noopener noreferrer" href="https://github.com/kodaskills/bevy_retro_shaders">GitHub</a></span>
+                            </div>
+                            <div class="hero-meta-item">
+                                <span class="hero-meta-label">Category</span>
+                                <span class="hero-meta-value">Graphics / Shaders</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="hero-visual">
+                        <img src="/assets/images/fox.png" alt="CRT Retro Fox" loading="eager" />
+                    </div>
+                </div>
+            </section>
+
+            <!-- ═══ FEATURES ═══ -->
+            <section id="features" class="features-section">
+                <div class="features-container">
+                    <div class="section-header">
+                        <div class="section-label">01 — Features</div>
+                        <h2 class="section-title">Complete CRT Effect Suite</h2>
+                        <p class="section-desc">
+                            All the tools you need to add authentic retro aesthetics to your Bevy games.
+                        </p>
+                    </div>
+
+                    <div class="bento-grid">
+                        <div class="bento-card">
+                            <div class="bento-card-header">
+                                <div class="bento-card-icon">📺</div>
+                                <h3 class="bento-card-title">Barrel Distortion</h3>
+                            </div>
+                            <p class="bento-card-desc">Curved screen simulation — from flat to strong CRT bulge effect.</p>
+                            <div class="bento-card-code">curvature: 0.0 → 0.1</div>
+                        </div>
+                        <div class="bento-card">
+                            <div class="bento-card-header">
+                                <div class="bento-card-icon">📡</div>
+                                <h3 class="bento-card-title">Scanlines</h3>
+                            </div>
+                            <p class="bento-card-desc">Cosine-based horizontal line pattern with adjustable intensity.</p>
+                            <div class="bento-card-code">scanline: 0.0 → 0.95</div>
+                        </div>
+                        <div class="bento-card">
+                            <div class="bento-card-header">
+                                <div class="bento-card-icon">🌈</div>
+                                <h3 class="bento-card-title">Chromatic Aberration</h3>
+                            </div>
+                            <p class="bento-card-desc">RGB channel offset for authentic retro color fringing.</p>
+                            <div class="bento-card-code">chromatic: 0.0 → 0.015</div>
+                        </div>
+                        <div class="bento-card">
+                            <div class="bento-card-header">
+                                <div class="bento-card-icon">🌑</div>
+                                <h3 class="bento-card-title">Vignette</h3>
+                            </div>
+                            <p class="bento-card-desc">Smooth edge darkening for cinematic framing.</p>
+                            <div class="bento-card-code">vignette: 0.0 → 1.0</div>
+                        </div>
+                        <div class="bento-card">
+                            <div class="bento-card-header">
+                                <div class="bento-card-icon">⚡</div>
+                                <h3 class="bento-card-title">Glitch Bursts</h3>
+                            </div>
+                            <p class="bento-card-desc">Randomized bursts with horizontal shift, RGB split, noise, and freeze.</p>
+                            <div class="bento-card-code">CrtGlitch::default()</div>
+                        </div>
+                        <div class="bento-card">
+                            <div class="bento-card-header">
+                                <div class="bento-card-icon">🎮</div>
+                                <h3 class="bento-card-title">Camera2d + Camera3d</h3>
+                            </div>
+                            <p class="bento-card-desc">Works on both 2D and 3D pipelines — same simple API.</p>
+                            <div class="bento-card-code">.add_plugins(CrtPlugin)</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ═══ CONTROLS ═══ -->
+            <section id="controls" class="controls-section">
+                <div class="controls-container">
+                    <div class="section-header">
+                        <div class="section-label">02 — Controls</div>
+                        <h2 class="section-title">Keyboard Shortcuts</h2>
+                        <p class="section-desc">
+                            Toggle effects in real-time to see the impact of each parameter.
+                        </p>
+                    </div>
+
+                    <div class="controls-grid">
+                        <div class="control-card">
+                            <div class="control-key">C</div>
+                            <div class="control-action">Toggle CRT Effect</div>
+                        </div>
+                        <div class="control-card">
+                            <div class="control-key">G</div>
+                            <div class="control-action">Toggle Glitch</div>
+                        </div>
+                        <div class="control-card">
+                            <div class="control-key">B</div>
+                            <div class="control-action">Toggle Bloom</div>
+                        </div>
+                        <div class="control-card">
+                            <div class="control-key">T</div>
+                            <div class="control-action">Toggle Tonemapping</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ═══ DEMO 2D ═══ -->
+            <section id="demo" class="demo-section">
+                <div class="demo-container">
+                    <div class="section-header">
+                        <div class="section-label">03 — Interactive Demo</div>
+                        <h2 class="section-title">Live WebAssembly Demo</h2>
+                        <p class="section-desc">
+                            Experience CRT post-processing effects directly in your browser.
+                            The shader runs entirely client-side via WebAssembly.
+                        </p>
+                    </div>
+
+                    <div class="demo-description">
+                        <h4>2D Interactive Scene</h4>
+                        <p>Sprites, images, and text with CRT barrel distortion, scanlines, and glitch effects. Toggle effects in real-time with egui controls.</p>
+                    </div>
+
+                    <div class="demo-canvas">
+                        <div id="wasm-loader">
+                            <div class="loader-frame">
+                                <div class="loader-accent"></div>
+                                <div class="loader-badge">WebAssembly</div>
+                                <div class="loader-title-text">BEVY RETRO SHADERS</div>
+                                <div class="loader-sub">Initializing CRT pipeline...</div>
+                                <div class="loader-bar-track">
+                                    <div class="loader-bar"></div>
+                                </div>
+                                <div id="loader-status" class="loader-status">Loading WASM module</div>
+                            </div>
+                        </div>
+                        <canvas id="bevy-canvas" tabindex="0"></canvas>
+                    </div>
+
+                    <div class="demo-description demo-description--spaced">
+                        <h4>or run the 2D Demo Locally</h4>
+                        <p>
+                            <code style="display: block; padding: 12px; background: var(--color-surface-container-lowest); border: 1px solid var(--color-outline-variant); margin: 12px 0;">
+                                cargo run --example crt_example --features "jpeg,hot_reload"
+                            </code>
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ═══ 3D PREVIEW ═══ -->
+            <section id="demo-3d" class="demo-section">
+                <div class="demo-container">
+                    <div class="section-header">
+                        <div class="section-label">Also Available — 3D Scene</div>
+                        <h2 class="section-title">3D Interactive Demo</h2>
+                        <p class="section-desc">
+                            A full 3D version with PBR lighting, rotating meshes, bloom, and tonemapping.
+                            Run it locally to experience CRT effects in 3D.
+                        </p>
+                    </div>
+
+                    <div style="margin-bottom: 32px;">
+                        <a href="/3d.html" class="btn btn-primary">
+                            <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                            Try 3D Demo
+                        </a>
+                    </div>
+
+                    <div class="demo-description">
+                        <h4>or run the 3D Demo Locally</h4>
+                        <p>
+                            <code style="display: block; padding: 12px; background: var(--color-surface-container-lowest); border: 1px solid var(--color-outline-variant); margin: 12px 0;">
+                                cargo run --example crt_3d_example
+                            </code>
+                            Features: PBR scene with 3 rotating spheres, directional light, bloom presets, tonemapping options, and full CRT post-processing with egui controls.
+                        </p>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- ═══ FOOTER ═══ -->
+        <footer class="footer">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <div class="footer-logo">Kodaskills</div>
+                    <p class="footer-tagline">Retro post-processing shaders for Bevy 0.18+</p>
+                </div>
+
+                <div class="footer-nav">
+                    <div class="footer-nav-column">
+                        <h4>Project</h4>
+                        <a target="_blank" rel="noopener noreferrer" href="https://github.com/kodaskills/bevy_retro_shaders">GitHub</a>
+                        <a target="_blank" rel="noopener noreferrer" href="https://crates.io/crates/bevy_retro_shaders">crates.io</a>
+                        <a target="_blank" rel="noopener noreferrer" href="https://github.com/kodaskills/bevy_retro_shaders/blob/main/CHANGELOG.md">Changelog</a>
+                        <a target="_blank" rel="noopener noreferrer" href="https://github.com/kodaskills/bevy_retro_shaders/blob/main/CONTRIBUTING.md">Contributing</a>
+                    </div>
+                    <div class="footer-nav-column">
+                        <h4>Resources</h4>
+                        <a target="_blank" rel="noopener noreferrer" href="https://github.com/kodaskills/bevy_retro_shaders#readme">Documentation</a>
+                        <a target="_blank" rel="noopener noreferrer" href="https://github.com/kodaskills/bevy_retro_shaders/issues">Issues</a>
+                        <a target="_blank" rel="noopener noreferrer" href="https://github.com/kodaskills/bevy_retro_shaders/releases">Releases</a>
+                        <a target="_blank" rel="noopener noreferrer" href="https://github.com/kodaskills/bevy_retro_shaders/blob/main/LICENSE">License (MIT)</a>
+                    </div>
+                    <div class="footer-nav-column">
+                        <h4>Connect</h4>
+                        <a target="_blank" rel="noopener noreferrer" href="https://github.com/kodaskills">GitHub</a>
+                        <a target="_blank" rel="noopener noreferrer" href="https://kodaskills.co">Website</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <div class="footer-copyright">
+                    © 2026 KODASKILLS • ALL RIGHTS RESERVED
+                </div>
+                <div class="footer-badges">
+                    <a target="_blank" rel="noopener noreferrer" href="https://crates.io/crates/bevy_retro_shaders">
+                        <img src="https://img.shields.io/crates/v/bevy_retro_shaders?style=for-the-badge&logo=rust&color=orange" alt="Crates.io">
+                    </a>
+                    <a target="_blank" rel="noopener noreferrer" href="https://github.com/kodaskills/bevy_retro_shaders/blob/main/LICENSE">
+                        <img src="https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge" alt="License">
+                    </a>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Demo — Bevy Retro Shaders — Kodaskills</title>
+    <!-- Web Demo 3D -->
+    <link data-trunk rel="rust" href="../Cargo.toml" data-bin="crt_3d_example_web" data-wasm-opt="z" />
+    <link data-trunk rel="copy-dir" href="../examples/assets" />
+    <link data-trunk rel="css" href="assets/css/style.css" />
+    <script data-trunk src="assets/js/main.js"></script>
+
+    <!-- Google Fonts: Inter + Space Grotesk -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+</head>
+<body class="page-3d" data-bevy-event="BevyApp3dReady">
+    <div class="page-wrapper">
+        <!-- ═══ HEADER ═══ -->
+        <header class="header">
+            <div class="header-content">
+                <a target="_blank" rel="noopener noreferrer" href="https://kodaskills.co" class="logo">Kodaskills</a>
+
+<div class="header-actions">
+                    <a target="_blank" rel="noopener noreferrer" href="https://github.com/kodaskills/bevy_retro_shaders" class="theme-toggle" aria-label="GitHub">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                        </svg>
+                    </a>
+                    <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+                        <svg id="moonIcon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                        </svg>
+                        <svg id="sunIcon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="display: none;">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- ═══ MAIN ═══ -->
+        <main class="main">
+            <section class="demo-section">
+                <div class="demo-container">
+
+                    <a href="/" class="back-link">
+                        <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+                        Back to Home
+                    </a>
+
+                    <div class="section-header">
+                        <div class="section-label">03 — Interactive Demo</div>
+                        <h2 class="section-title">3D Live Demo</h2>
+                        <p class="section-desc">
+                            CRT post-processing on a 3D scene — barrel distortion, scanlines, chromatic aberration, and glitch running on Camera3d via WebAssembly.
+                        </p>
+                    </div>
+
+                    <div class="demo-canvas">
+                        <div id="wasm-loader">
+                            <div class="loader-frame">
+                                <div class="loader-accent"></div>
+                                <div class="loader-badge">WebAssembly • 3D</div>
+                                <div class="loader-title-text">BEVY RETRO SHADERS</div>
+                                <div class="loader-sub">Initializing 3D CRT pipeline...</div>
+                                <div class="loader-bar-track">
+                                    <div class="loader-bar"></div>
+                                </div>
+                                <div id="loader-status" class="loader-status">Loading WASM module</div>
+                            </div>
+                        </div>
+                        <canvas id="bevy-canvas-3d" tabindex="0"></canvas>
+                    </div>
+
+                </div>
+            </section>
+        </main>
+
+        <!-- ═══ FOOTER ═══ -->
+        <footer class="footer">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <div class="footer-logo">Kodaskills</div>
+                    <p class="footer-tagline">Retro post-processing shaders for Bevy 0.18+</p>
+                </div>
+
+                <div class="footer-nav">
+                    <div class="footer-nav-column">
+                        <h4>Project</h4>
+                        <a target="_blank" rel="noopener noreferrer" href="https://github.com/kodaskills/bevy_retro_shaders">GitHub</a>
+                        <a target="_blank" rel="noopener noreferrer" href="https://crates.io/crates/bevy_retro_shaders">crates.io</a>
+                        <a target="_blank" rel="noopener noreferrer" href="https://github.com/kodaskills/bevy_retro_shaders/blob/main/CHANGELOG.md">Changelog</a>
+                        <a target="_blank" rel="noopener noreferrer" href="https://github.com/kodaskills/bevy_retro_shaders/blob/main/CONTRIBUTING.md">Contributing</a>
+                    </div>
+                    <div class="footer-nav-column">
+                        <h4>Resources</h4>
+                        <a target="_blank" rel="noopener noreferrer" href="https://github.com/kodaskills/bevy_retro_shaders#readme">Documentation</a>
+                        <a target="_blank" rel="noopener noreferrer" href="https://github.com/kodaskills/bevy_retro_shaders/issues">Issues</a>
+                        <a target="_blank" rel="noopener noreferrer" href="https://github.com/kodaskills/bevy_retro_shaders/releases">Releases</a>
+                        <a target="_blank" rel="noopener noreferrer" href="https://github.com/kodaskills/bevy_retro_shaders/blob/main/LICENSE">License (MIT)</a>
+                    </div>
+                    <div class="footer-nav-column">
+                        <h4>Connect</h4>
+                        <a target="_blank" rel="noopener noreferrer" href="https://github.com/kodaskills">GitHub</a>
+                        <a target="_blank" rel="noopener noreferrer" href="https://kodaskills.co">Website</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <div class="footer-copyright">
+                    © 2026 KODASKILLS • ALL RIGHTS RESERVED
+                </div>
+                <div class="footer-badges">
+                    <a target="_blank" rel="noopener noreferrer" href="https://crates.io/crates/bevy_retro_shaders">
+                        <img src="https://img.shields.io/crates/v/bevy_retro_shaders?style=for-the-badge&logo=rust&color=orange" alt="Crates.io">
+                    </a>
+                    <a target="_blank" rel="noopener noreferrer" href="https://github.com/kodaskills/bevy_retro_shaders/blob/main/LICENSE">
+                        <img src="https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge" alt="License">
+                    </a>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+</body>
+</html>
