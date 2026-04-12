@@ -1,0 +1,156 @@
+[package]
+name = "bevy_retro_shaders"
+version = "0.1.0"
+edition = "2021"
+authors = ["Yudao"]
+description = "Retro post-processing shaders for Bevy - CRT effects, scanlines, and glitch effects"
+license = "MIT"
+repository = "https://github.com/kodaskills/bevy_retro_shaders"
+keywords = ["bevy", "graphics", "shader", "retro", "crt"]
+categories = ["graphics", "game-development"]
+
+[dependencies]
+bevy = { version = "0.18", default-features = false }
+bevy_egui = "0.39"
+rand = "0.8"
+
+# Web dependencies
+wasm-bindgen = "0.2"
+wasm-bindgen-futures = "0.4"
+js-sys = "0.3"
+web-sys = { version = "0.3", features = [
+    "Window",
+    "Document",
+    "HtmlCanvasElement",
+    "Worker",
+    "MessageEvent",
+    "OffscreenCanvas",
+    "DedicatedWorkerGlobalScope",
+    "MouseEvent",
+    "WorkerOptions",
+    "WorkerType",
+    "CustomEvent",
+] }
+raw-window-handle = "0.6"
+console_log = "1.0"
+console_error_panic_hook = "0.1"
+
+# WASM support for getrandom (used by rand)
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+getrandom = { version = "0.2", features = ["js"] }
+
+[dev-dependencies]
+bevy = { version = "0.18", features = ["debug"] }
+
+[features]
+default = ["crt", "jpeg", "native"]
+crt = []
+jpeg = ["bevy/jpeg"]
+hot_reload = ["bevy/file_watcher"]
+
+# ── Web build — lean feature set for WASM ────────────────────────────────────
+# Used by Trunk via data-cargo-no-default-features + data-cargo-features="crt,jpeg,web"
+web = [
+    # common_api (types/components)
+    "bevy/bevy_animation",
+    "bevy/bevy_camera",
+    "bevy/bevy_color",
+    "bevy/bevy_gizmos",
+    "bevy/bevy_image",
+    "bevy/bevy_mesh",
+    "bevy/bevy_shader",
+    "bevy/bevy_text",
+    "bevy/hdr",
+    "bevy/png",
+    # 2D API + render
+    "bevy/bevy_sprite",
+    "bevy/bevy_sprite_render",
+    # 3D API + render
+    "bevy/bevy_pbr",
+    # UI + render
+    "bevy/bevy_ui",
+    "bevy/bevy_ui_render",
+    # Render infrastructure
+    "bevy/bevy_render",
+    "bevy/bevy_core_pipeline",
+    "bevy/bevy_post_process",
+    "bevy/bevy_gizmos_render",
+    # App infrastructure
+    "bevy/bevy_asset",
+    "bevy/bevy_winit",
+    "bevy/bevy_scene",
+    "bevy/bevy_state",
+    "bevy/bevy_picking",
+    "bevy/default_font",
+    "bevy/tonemapping_luts",
+    # WASM platform
+    "bevy/web",
+    "bevy/webgl2",
+]
+
+# ── Native build — full feature set ──────────────────────────────────────────
+# Included in default, used by cargo run / cargo build
+native = [
+    # common_api (types/components)
+    "bevy/bevy_animation",
+    "bevy/bevy_camera",
+    "bevy/bevy_color",
+    "bevy/bevy_gizmos",
+    "bevy/bevy_image",
+    "bevy/bevy_mesh",
+    "bevy/bevy_shader",
+    "bevy/bevy_text",
+    "bevy/hdr",
+    "bevy/png",
+    # 2D API + render
+    "bevy/bevy_sprite",
+    "bevy/bevy_sprite_render",
+    # 3D API + render
+    "bevy/bevy_pbr",
+    # UI + render
+    "bevy/bevy_ui",
+    "bevy/bevy_ui_render",
+    # Render infrastructure
+    "bevy/bevy_render",
+    "bevy/bevy_core_pipeline",
+    "bevy/bevy_post_process",
+    "bevy/bevy_gizmos_render",
+    # App infrastructure
+    "bevy/bevy_asset",
+    "bevy/bevy_winit",
+    "bevy/bevy_scene",
+    "bevy/bevy_state",
+    "bevy/bevy_picking",
+    "bevy/default_font",
+    "bevy/tonemapping_luts",
+    # Native platform
+    "bevy/bevy_audio",
+    "bevy/bevy_gilrs",
+    "bevy/vorbis",
+    "bevy/x11",
+    "bevy/multi_threaded",
+]
+
+[[example]]
+name = "crt_example"
+path = "examples/crt_example.rs"
+required-features = ["jpeg", "hot_reload"]
+
+[[example]]
+name = "crt_3d_example"
+path = "examples/crt_3d_example.rs"
+
+[[bin]]
+name = "crt_example_web"
+path = "examples/crt_example.rs"
+
+[[bin]]
+name = "crt_3d_example_web"
+path = "examples/crt_3d_example.rs"
+
+[profile.release]
+opt-level = "s"
+lto = "thin"
+codegen-units = 1
+panic = "abort"
+strip = "debuginfo"

@@ -1,0 +1,92 @@
+name: GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/**"
+      - "examples/**"
+      - "web/**"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  # ── Build WASM Examples ───────────────────────────────────────────────────
+  build:
+    name: Build WASM Examples
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: "wasm"
+
+      - name: Install Trunk
+        run: cargo install --locked trunk
+
+      - name: Install Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            pkg-config \
+            libx11-dev \
+            libasound2-dev \
+            libudev-dev \
+            libwayland-dev \
+            libxkbcommon-dev
+
+      - name: Build 2D example (index.html)
+        env:
+          TRUNK_BUILD_DIST: web/dist
+        run: trunk build web/index.html --release --filehash false
+
+      - name: Build 3D example (3d.html)
+        env:
+          TRUNK_BUILD_DIST: web/dist-3d
+        run: |
+          trunk build web/3d.html --release --filehash false
+          # Rename if trunk emitted index.html instead of 3d.html
+          [ -f web/dist-3d/index.html ] && mv web/dist-3d/index.html web/dist-3d/3d.html || true
+          # Merge only 3D-specific artifacts; CSS/JS/assets are shared from the 2D build
+          cp web/dist-3d/3d.html web/dist/3d.html
+          cp web/dist-3d/crt_3d_example_web*.js web/dist/
+          cp web/dist-3d/crt_3d_example_web*.wasm web/dist/
+          rm -rf web/dist-3d
+
+      - name: Setup GitHub Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: web/dist/
+
+  # ── Deploy to GitHub Pages ────────────────────────────────────────────────
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
