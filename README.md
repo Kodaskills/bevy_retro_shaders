@@ -38,7 +38,7 @@
 
 ## 🚀 Getting Started
 
-**<a href="https://rbs.kodaskills.co" target="_blank">▶ Live Demo</a>**
+**<a href="https://brs.kodaskills.co" target="_blank">▶ Live Demo</a>**
 
 ### Prerequisites
 
