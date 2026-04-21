@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://github.com/Kodaskills/bevy_retro_shaders/compare/bevy_retro_shaders-v0.1.0...bevy_retro_shaders-v0.1.1) (2026-04-21)
+
+
+### Documentation
+
+* 📝 fix live demo link ([854f595](https://github.com/Kodaskills/bevy_retro_shaders/commit/854f595940fb537ae88197a6a549d14fdbb553aa))
+
 ## 0.1.0 (2026-04-18)
 
 
