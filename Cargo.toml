@@ -11,7 +11,7 @@ categories = ["graphics", "game-development"]
 
 [dependencies]
 bevy = { version = "0.18", default-features = false }
-rand = "0.9.3"
+rand = "0.9.4"
 
 # Example/demo deps — not compiled for library users
 bevy_egui            = { version = "0.39", optional = true }
