@@ -231,8 +231,7 @@ fn update_crt_glitch(time: Res<Time>, mut query: Query<(&mut CrtSettings, &mut C
             settings.glitch_flags = flags as f32;
         } else if t >= glitch.next_glitch {
             // ── Start a new burst ──
-            let interval: f32 =
-                rand::thread_rng().gen_range(glitch.interval_min..glitch.interval_max);
+            let interval: f32 = rand::rng().random_range(glitch.interval_min..glitch.interval_max);
             glitch.glitch_end = t + glitch.duration;
             glitch.next_glitch = glitch.glitch_end + interval;
             settings.glitch_intensity = 0.01;
