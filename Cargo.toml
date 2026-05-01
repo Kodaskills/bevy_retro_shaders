@@ -11,7 +11,7 @@ categories = ["graphics", "game-development"]
 
 [dependencies]
 bevy = { version = "0.18", default-features = false }
-rand = "0.9.4"
+rand = "0.10.1"
 
 # Example/demo deps — not compiled for library users
 bevy_egui            = { version = "0.39", optional = true }
@@ -37,7 +37,7 @@ console_error_panic_hook = { version = "0.1", optional = true }
 
 # WASM support for getrandom (used by rand)
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-getrandom = { version = "0.2", features = ["js"] }
+getrandom = { version = "0.4", features = ["wasm_js"] }
 
 [dev-dependencies]
 bevy = { version = "0.18", features = ["debug"] }
