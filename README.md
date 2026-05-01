@@ -207,10 +207,10 @@ commands.spawn((
 
 ```bash
 # 2D interactive demo — images, text, colors, bloom, tonemapping
-cargo run --example crt_example --features "jpeg,hot_reload"
+cargo run --example crt_example --features "jpeg,hot_reload,examples"
 
 # 3D interactive demo — PBR scene with rotating meshes
-cargo run --example crt_3d_example
+cargo run --example crt_3d_example --features examples
 ```
 
 ### Example controls
@@ -254,7 +254,7 @@ hot_reload = ["bevy/file_watcher"] # Asset hot-reloading
 
 | `bevy` | `bevy_retro_shaders` |
 | ------ | -------------------- |
-| 0.18   | 0.1                  |
+| 0.18   | 0.1+                 |
 
 ---
 

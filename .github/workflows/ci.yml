@@ -126,8 +126,8 @@ jobs:
             libwayland-dev \
             libxkbcommon-dev
 
-      - run: cargo build --example crt_example --features "jpeg,hot_reload"
-      - run: cargo build --example crt_3d_example
+      - run: cargo build --example crt_example --features "jpeg,hot_reload,examples"
+      - run: cargo build --example crt_3d_example --features examples
 
   # ── Documentation Build ───────────────────────────────────────────────────
   docs:
