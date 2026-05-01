@@ -11,4 +11,3 @@ open = false
 
 [clean]
 cargo = false
-dist = false

@@ -27,12 +27,12 @@ web-serve-3d:
 # Run the 2D CRT interactive example (Native)
 [group('examples')]
 run-2d:
-    cargo run --example crt_example --features "jpeg,hot_reload"
+    cargo run --example crt_example --features "jpeg,hot_reload,examples"
 
 # Run the 3D interactive example with PBR (Native)
 [group('examples')]
 run-3d:
-    cargo run --example crt_3d_example
+    cargo run --example crt_3d_example --features examples
 
 # Build all targets (Native examples + Web demo)
 [group('common')]
