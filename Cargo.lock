@@ -1370,6 +1370,8 @@ dependencies = [
  "js-sys",
  "rand 0.10.1",
  "raw-window-handle",
+ "serde",
+ "serde_json",
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",

@@ -3,6 +3,19 @@ use bevy::render::{render_graph::RenderGraphExt, RenderApp};
 use bevy::{core_pipeline::tonemapping::Tonemapping, prelude::*};
 use bevy_egui::{egui, render::graph::NodeEgui, EguiContexts, EguiPlugin, EguiPrimaryContextPass};
 use bevy_retro_shaders::{CrtGlitch, CrtLabel, CrtPlugin, CrtSettings};
+use serde::Serialize;
+
+#[cfg(target_arch = "wasm32")]
+#[path = "common/analytics.rs"]
+mod analytics;
+
+/// Tracks clicks, keypresses, and checkbox toggles. No-op on desktop.
+#[cfg(target_arch = "wasm32")]
+fn track_interaction(interaction_type: &str, element_name: &str, element_location: &str) {
+    analytics::emit_ui_interaction(interaction_type, element_name, element_location);
+}
+#[cfg(not(target_arch = "wasm32"))]
+fn track_interaction(_: &str, _: &str, _: &str) {}
 
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
@@ -34,47 +47,80 @@ struct DemoTextMarker;
 
 // ── State ─────────────────────────────────────────────────────────────────────
 
-#[derive(Resource)]
+#[derive(Resource, Clone, Serialize)]
 struct CrtState {
     // CRT
+    #[serde(rename = "crt_toggle")]
     enabled: bool,
+    #[serde(rename = "crt_curvature")]
     curvature: f32,
+    #[serde(rename = "crt_chromatic")]
     chromatic: f32,
+    #[serde(rename = "crt_vignette")]
     vignette: f32,
+    #[serde(rename = "crt_scanlines")]
     scanlines: f32,
+    #[serde(rename = "crt_noise")]
     noise: f32,
     // Glitch
+    #[serde(rename = "glitch_toggle")]
     glitch_enabled: bool,
+    #[serde(rename = "glitch_intensity")]
     glitch_intensity: f32,
+    #[serde(rename = "glitch_interval_min")]
     glitch_interval_min: f32,
+    #[serde(rename = "glitch_interval_max")]
     glitch_interval_max: f32,
+    #[serde(rename = "glitch_duration")]
     glitch_duration: f32,
+    #[serde(rename = "glitch_horizontal_shift")]
     glitch_horizontal_shift: bool,
+    #[serde(rename = "glitch_rgb_split")]
     glitch_rgb_split: bool,
+    #[serde(rename = "glitch_noise")]
     glitch_noise: bool,
+    #[serde(rename = "glitch_freeze")]
     glitch_freeze: bool,
     // Demo scene
+    #[serde(rename = "scene_content")]
     selected_demo: usize,
+    #[serde(rename = "scene_show")]
     show_sprite: bool,
+    #[serde(rename = "scene_image")]
     selected_image: usize,
+    #[serde(rename = "scene_image_mode")]
     image_mode: usize, // 0=sprite 1=background
     // Text
+    #[serde(rename = "text_type")]
     text_demo: usize, // 0=none 1=title 2=paragraph
+    #[serde(rename = "text_title")]
     title_input: String,
+    #[serde(rename = "text_paragraph")]
     paragraph_input: String,
     // Bloom
+    #[serde(rename = "bloom_toggle")]
     bloom_enabled: bool,
+    #[serde(rename = "bloom_preset")]
     bloom_preset: usize, // 0=Natural 1=OldSchool 2=ScreenBlur 3=Anamorphic 4=Custom
+    #[serde(rename = "bloom_intensity")]
     bloom_intensity: f32,
+    #[serde(rename = "bloom_low_freq_boost")]
     bloom_low_freq_boost: f32,
+    #[serde(rename = "bloom_low_freq_boost_curve")]
     bloom_low_freq_boost_curve: f32,
+    #[serde(rename = "bloom_high_pass")]
     bloom_high_pass: f32,
+    #[serde(rename = "bloom_threshold")]
     bloom_threshold: f32,
+    #[serde(rename = "bloom_threshold_softness")]
     bloom_threshold_softness: f32,
     // Tonemapping
+    #[serde(rename = "tonemapping_toggle")]
     tonemapping_enabled: bool,
+    #[serde(rename = "tonemapping_preset")]
     tonemapping: usize,
     // UI
+    #[serde(rename = "ui_panels")]
     panels_visible: bool,
 }
 
@@ -270,11 +316,16 @@ fn run_app() {
                 update_demo_display,
                 update_text_display,
                 #[cfg(target_arch = "wasm32")]
+                analytics::track_resource_changes::<CrtState>,
+                #[cfg(target_arch = "wasm32")]
                 signal_ready,
             ),
         )
-        .insert_resource(CrtState::default())
-        .insert_resource(DemoImages::default())
+        .insert_resource(CrtState::default());
+    #[cfg(target_arch = "wasm32")]
+    app.insert_resource(analytics::PreviousState(CrtState::default()))
+        .insert_resource(analytics::AnalyticsDebounce::<CrtState>::default());
+    app.insert_resource(DemoImages::default())
         .insert_resource(DemoTextState::default())
         .run();
 }
@@ -388,22 +439,53 @@ fn ui_controls(
     keys: Res<ButtonInput<KeyCode>>,
     demo_images: Res<DemoImages>,
 ) {
-    if keys.just_pressed(KeyCode::KeyH) {
-        state.panels_visible = !state.panels_visible;
-    }
-    if keys.just_pressed(KeyCode::KeyC) {
+    let prev_enabled = state.enabled;
+    let prev_glitch = state.glitch_enabled;
+    let prev_bloom = state.bloom_enabled;
+    let prev_tonemapping = state.tonemapping_enabled;
+    // Glitch sub-options
+    let prev_horiz_shift = state.glitch_horizontal_shift;
+    let prev_rgb_split = state.glitch_rgb_split;
+    let prev_glitch_noise = state.glitch_noise;
+    let prev_glitch_freeze = state.glitch_freeze;
+    // Bloom
+    let prev_bloom_preset = state.bloom_preset;
+    // Tonemapping
+    let prev_tonemapping_preset = state.tonemapping;
+    // Scene
+    let prev_show_sprite = state.show_sprite;
+    let prev_selected_demo = state.selected_demo;
+    let prev_selected_image = state.selected_image;
+    let prev_image_mode = state.image_mode;
+    // Text
+    let prev_text_demo = state.text_demo;
+
+    // ── Keyboard shortcuts ───────────────────────────────────────────────────
+    // Memorizes which toggles were changed by keypresses, so that the post-UI click detection can ignore those changes and
+    // avoid emitting duplicate analytics events (keypress + click) for the same change.
+    let key_crt = keys.just_pressed(KeyCode::KeyC);
+    let key_glitch = keys.just_pressed(KeyCode::KeyG);
+    let key_bloom = keys.just_pressed(KeyCode::KeyB);
+    let key_tonemapping = keys.just_pressed(KeyCode::KeyT);
+
+    if key_crt {
         state.enabled = !state.enabled;
+        track_interaction("keypress", "crt_toggle", "canvas");
     }
-    if keys.just_pressed(KeyCode::KeyG) {
+    if key_glitch {
         state.glitch_enabled = !state.glitch_enabled;
+        track_interaction("keypress", "glitch_toggle", "canvas");
     }
-    if keys.just_pressed(KeyCode::KeyB) {
+    if key_bloom {
         state.bloom_enabled = !state.bloom_enabled;
+        track_interaction("keypress", "bloom_toggle", "canvas");
     }
-    if keys.just_pressed(KeyCode::KeyT) {
+    if key_tonemapping {
         state.tonemapping_enabled = !state.tonemapping_enabled;
+        track_interaction("keypress", "tonemapping_toggle", "canvas");
     }
 
+    // ── Render EGUI  ───────────────────────────────────────────────────────────
     let ctx = contexts.ctx_mut().expect("failed to get egui context");
 
     if !state.panels_visible {
@@ -576,6 +658,64 @@ fn ui_controls(
             ui.label(shortcuts_label());
         });
     });
+
+    // ── Click Detection (Post-UI Render) ─────────────────────────────
+    // Detects changes to toggles that were NOT caused by keypresses
+    if !key_crt && state.enabled != prev_enabled {
+        track_interaction("click", "crt_toggle", "canvas");
+    }
+    if !key_glitch && state.glitch_enabled != prev_glitch {
+        track_interaction("click", "glitch_toggle", "canvas");
+    }
+    if !key_bloom && state.bloom_enabled != prev_bloom {
+        track_interaction("click", "bloom_toggle", "canvas");
+    }
+    if !key_tonemapping && state.tonemapping_enabled != prev_tonemapping {
+        track_interaction("click", "tonemapping_toggle", "canvas");
+    }
+
+    // Glitch sub-options
+    if state.glitch_horizontal_shift != prev_horiz_shift {
+        track_interaction("click", "glitch_horizontal_shift", "canvas");
+    }
+    if state.glitch_rgb_split != prev_rgb_split {
+        track_interaction("click", "glitch_rgb_split", "canvas");
+    }
+    if state.glitch_noise != prev_glitch_noise {
+        track_interaction("click", "glitch_noise", "canvas");
+    }
+    if state.glitch_freeze != prev_glitch_freeze {
+        track_interaction("click", "glitch_freeze", "canvas");
+    }
+
+    // Bloom preset (radio buttons)
+    if state.bloom_preset != prev_bloom_preset {
+        track_interaction("click", "bloom_preset", "canvas");
+    }
+
+    // Tonemapping preset (radio buttons)
+    if state.tonemapping != prev_tonemapping_preset {
+        track_interaction("click", "tonemapping_preset", "canvas");
+    }
+
+    // Scene options
+    if state.show_sprite != prev_show_sprite {
+        track_interaction("click", "scene_show", "canvas");
+    }
+    if state.selected_demo != prev_selected_demo {
+        track_interaction("click", "scene_content", "canvas");
+    }
+    if state.selected_image != prev_selected_image {
+        track_interaction("click", "scene_image", "canvas");
+    }
+    if state.image_mode != prev_image_mode {
+        track_interaction("click", "scene_image_mode", "canvas");
+    }
+
+    // Text options
+    if state.text_demo != prev_text_demo {
+        track_interaction("click", "text_type", "canvas");
+    }
 }
 
 // ── Systems ───────────────────────────────────────────────────────────────────
