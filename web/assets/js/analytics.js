@@ -1,8 +1,13 @@
+// Determine current page (demo or 3d)
+// This function is "Head-safe" as it doesn't rely on document.body
+function getPage() {
+    return window.location.pathname.includes('3d.html') ? '3d' : 'demo';
+}
+
 // Initialize data layer
 window.dataLayer = window.dataLayer || [];
 
-// Determine current page (demo or 3d) from Bevy's data attribute
-const page = document.body.dataset.bevyEvent === 'BevyApp3dReady' ? '3d' : 'demo';
+const page = getPage();
 
 const uiInteractionMap = {
   // Shared (both pages)
@@ -50,9 +55,8 @@ function pushUiInteraction(key) {
   });
 }
 
-
 function getThemeState() {
-  const isDark = document.body.classList.contains('dark');
+  const isDark = document.documentElement.classList.contains('dark');
   if (isDark) return 'dark';
   const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
   return prefersDark ? 'dark' : 'light';
@@ -67,39 +71,42 @@ function pushSystemEvent(systemAction, systemState) {
   });
 }
 
-// On page load
-const currentTheme = getThemeState();
-if (page === '3d') {
-  // For 3D page: use init_dark or init_light
-  pushSystemEvent('page_load', currentTheme === 'dark' ? 'init_dark' : 'init_light');
-} else {
-  // For demo page: use 'theme' as state value (the actual theme)
-  pushSystemEvent('page_load', currentTheme);
-}
+// Initialize when DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+  // On page load
+  const currentTheme = getThemeState();
+  if (page === '3d') {
+    pushSystemEvent('page_load', currentTheme === 'dark' ? 'init_dark' : 'init_light');
+  } else {
+    pushSystemEvent('page_load', currentTheme);
+  }
 
-document.addEventListener('click', (e) => {
-  const trackedEl = e.target.closest('[data-analytics]');
-  if (!trackedEl) return;
-  pushUiInteraction(trackedEl.getAttribute('data-analytics'));
+  // Click tracking
+  document.addEventListener('click', (e) => {
+    const trackedEl = e.target.closest('[data-analytics]');
+    if (!trackedEl) return;
+    pushUiInteraction(trackedEl.getAttribute('data-analytics'));
+  });
+
+  // Section view tracking (demo only)
+  if (page === 'demo') {
+    const viewedSections = new Set();
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        const key = entry.target.dataset.analyticsSection;
+        if (!key || viewedSections.has(key)) return;
+        viewedSections.add(key);
+        pushUiInteraction(key);
+      });
+    }, { threshold: 0.3 });
+
+    document.querySelectorAll('[data-analytics-section]').forEach((el) => observer.observe(el));
+  }
 });
 
-// Section view tracking (demo only) 
-if (page === 'demo') {
-  const viewedSections = new Set();
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach((entry) => {
-      if (!entry.isIntersecting) return;
-      const key = entry.target.dataset.analyticsSection;
-      if (!key || viewedSections.has(key)) return;
-      viewedSections.add(key);
-      pushUiInteraction(key);
-    });
-  }, { threshold: 0.3 });
-
-  document.querySelectorAll('[data-analytics-section]').forEach((el) => observer.observe(el));
-}
-
 // Listen for analytics CustomEvents from WASM (CrtState changes via egui)
+// Always active, even before DOMContentLoaded
 window.addEventListener("analytics_event", (e) => {
   if (!e.detail) return;
   window.dataLayer.push(e.detail);

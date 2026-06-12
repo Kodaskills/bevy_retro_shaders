@@ -22,10 +22,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const sunIcon = document.getElementById('sunIcon');
     const html = document.documentElement;
 
-    function getPage() {
-        return document.body.dataset.bevyEvent === 'BevyApp3dReady' ? '3d' : 'demo';
-}
-
     function updateIcons(isDark) {
         moonIcon.style.display = isDark ? 'none' : 'block';
         sunIcon.style.display = isDark ? 'block' : 'none';
@@ -93,13 +89,5 @@ document.addEventListener('DOMContentLoaded', () => {
             const target = document.querySelector(this.getAttribute('href'));
             if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
         });
-    });
-
-    // Hide loading message on load
-    window.addEventListener('load', () => {
-        setTimeout(() => {
-            const loading = document.getElementById('loading-message');
-            if (loading) loading.style.display = 'none';
-        }, 2000);
     });
 });
