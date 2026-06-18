@@ -1,31 +1,38 @@
 #![cfg(target_arch = "wasm32")]
-use bevy::ecs::system::SystemParam;
+use bevy::input::keyboard::KeyboardInput;
+use bevy::input::ButtonState;
 use bevy::prelude::*;
 use serde::Serialize;
 use serde_json::Value;
 use web_sys::{window, CustomEvent, CustomEventInit};
 
-use crate::egui_events::UiInteraction;
+use crate::egui_events::UiEvent;
 use crate::CrtState;
 
-// ── Resources ─────────────────────────────────────────────────────────────────
+const TRACKED_KEYS: [KeyCode; 5] = [
+    KeyCode::KeyC,
+    KeyCode::KeyG,
+    KeyCode::KeyB,
+    KeyCode::KeyT,
+    KeyCode::KeyH,
+];
 
 pub struct AnalyticsPlugin;
 
 impl Plugin for AnalyticsPlugin {
     fn build(&self, app: &mut App) {
-        app.add_message::<crate::egui_events::UiInteraction>()
-            .insert_resource(EventState::default())
-            .add_systems(Update, process_analytics);
+        app.add_message::<UiEvent>()
+            .insert_resource(AnalyticsState::default())
+            .add_systems(PostUpdate, process_analytics);
     }
 }
 
 #[derive(Resource)]
-pub struct EventState {
-    pub previous: CrtState,
+struct AnalyticsState {
+    previous: CrtState,
 }
 
-impl Default for EventState {
+impl Default for AnalyticsState {
     fn default() -> Self {
         Self {
             previous: CrtState::default(),
@@ -33,139 +40,98 @@ impl Default for EventState {
     }
 }
 
-// ── Types ──────────────────────────────────────────────────────────────
-
-#[derive(Debug, Clone)]
-pub enum InteractionType {
-    #[allow(dead_code)]
-    Click,
-    KeyPress(KeyCode),
-    Named(String),
-}
-
-impl InteractionType {
-    pub fn as_str(&self) -> String {
-        match self {
-            Self::Click => "click".to_string(),
-            Self::KeyPress(k) => format!("keypress:{:?}", k),
-            Self::Named(s) => s.clone(),
-        }
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct StateDiff(serde_json::Map<String, Value>);
-
-impl StateDiff {
-    pub fn try_from(old: &CrtState, new: &CrtState) -> Option<Self> {
-        let old_v = serde_json::to_value(old).ok()?;
-        let new_v = serde_json::to_value(new).ok()?;
-
-        let diff: serde_json::Map<String, Value> = new_v
-            .as_object()?
-            .iter()
-            .filter(|(k, v)| old_v.as_object()?.get(*k).map_or(true, |o| o != *v))
-            .map(|(k, v)| (k.clone(), v.clone()))
-            .collect();
-
-        if diff.is_empty() {
-            None
-        } else {
-            Some(Self(diff))
-        }
-    }
-
-    pub fn as_value(&self) -> Value {
-        Value::Object(self.0.clone())
-    }
-}
-
-// ── Payload Structure ─────────────────────────────────────────────────────────
-
 #[derive(Serialize)]
 struct AnalyticsPayload<'a> {
     event: &'static str,
     page_name: String,
     element_type: &'static str,
     interaction_type: &'a str,
-    state_diff: &'a Value,
-}
-
-impl<'a> AnalyticsPayload<'a> {
-    fn new(interaction_type: &'a str, state_diff: &'a Value) -> Self {
-        Self {
-            event: "ui_interaction",
-            page_name: get_page_name(),
-            element_type: "wasm_egui",
-            interaction_type,
-            state_diff,
-        }
-    }
+    changes: serde_json::Map<String, Value>,
 }
 
 fn get_page_name() -> String {
-    let path = window()
+    web_sys::window()
         .and_then(|w| w.location().pathname().ok())
-        .unwrap_or_default();
-    let segments: Vec<&str> = path.split('/').filter(|s| !s.is_empty()).collect();
-    match segments.last() {
-        Some(last) => last.to_string(),
-        None => "index".to_string(),
+        .unwrap_or_default()
+        .split('/')
+        .filter(|s| !s.is_empty())
+        .last()
+        .map(|s| s.to_string())
+        .unwrap_or_else(|| "index".to_string())
+}
+
+fn detect_changes(old: &CrtState, current: &CrtState) -> Option<serde_json::Map<String, Value>> {
+    let old_v = serde_json::to_value(old).ok()?;
+    let new_v = serde_json::to_value(current).ok()?;
+
+    let changes: serde_json::Map<String, Value> = new_v
+        .as_object()?
+        .iter()
+        .filter(|(k, v)| {
+            if let Some(obj) = old_v.as_object() {
+                obj.get(*k).map_or(true, |o| o != *v)
+            } else {
+                false
+            }
+        })
+        .map(|(k, v)| (k.clone(), v.clone()))
+        .collect();
+
+    if changes.is_empty() {
+        None
+    } else {
+        Some(changes)
     }
 }
 
-// ── Events & SystemParam for UI capture ─────────────────────────────────────
+fn process_analytics(
+    current: Res<CrtState>,
+    mut ui_events: MessageReader<UiEvent>,
+    mut analytics_state: ResMut<AnalyticsState>,
+    mut key_reader: MessageReader<KeyboardInput>,
+    mut egui_ctx: bevy_egui::EguiContexts,
+) {
+    let mut interaction_type: Option<String> = None;
 
-#[cfg(target_arch = "wasm32")]
-use crate::egui_events::UiInteraction;
-
-// ── SystemParam for analytics processing ────────────────────────────────────
-
-#[derive(SystemParam)]
-pub struct AnalyticsInput<'w> {
-    pub current: Res<'w, CrtState>,
-    pub event_state: ResMut<'w, EventState>,
-    pub keyboard_events: EventReader<'w, KeyboardInput>,
-    pub ui_events: MessageReader<'w, UiInteraction>,
-}
-
-fn detect_interaction(input: &mut AnalyticsInput) -> Option<InteractionType> {
-    let mut interaction = None;
-
-    for ev in input.keyboard_events.read() {
-        if ev.state == ButtonState::Pressed {
-            interaction = Some(InteractionType::KeyPress(ev.key_code));
+    // Don't report keyboard presses when user is typing in an egui text field
+    let wants_keyboard = egui_ctx.ctx_mut().is_ok_and(|ctx| ctx.wants_keyboard_input());
+    if !wants_keyboard {
+        for ev in key_reader.read() {
+            if ev.state == ButtonState::Pressed && TRACKED_KEYS.contains(&ev.key_code) {
+                interaction_type = Some(format!("key_press:{:?}", ev.key_code));
+            }
         }
     }
-    for ui_ev in input.ui_events.read() {
-        interaction = Some(InteractionType::Named(ui_ev.widget_id.clone()));
+    for ev in ui_events.read() {
+        interaction_type = Some(ev.interaction_type.clone());
     }
 
-    interaction
-}
+    let Some(interaction) = interaction_type else {
+        return;
+    };
 
-// ── Proxy ─────────────────────────────────────────────────────────────────────
+    let old = analytics_state.previous.clone();
 
-pub fn process_analytics(mut input: AnalyticsInput) {
-    let diff = StateDiff::try_from(&input.event_state.previous, &input.current);
-
-    let interaction = detect_interaction(&mut input);
-
-    if let Some(diff) = &diff {
-        input.event_state.previous = input.current.clone();
-
-        if let Some(interaction) = interaction {
-            dispatch_to_js(&interaction, diff);
-        }
+    if let Some(changes) = detect_changes(&old, &current) {
+        dispatch_to_js(&interaction, &changes);
     }
+
+    analytics_state.previous = (*current).clone();
 }
 
-// ── Dispatch JS ───────────────────────────────────────────────────────────────
+fn dispatch_to_js(interaction_type: &str, changes: &serde_json::Map<String, Value>) {
+    let page_name = get_page_name();
 
-fn dispatch_to_js(interaction: &InteractionType, diff: &StateDiff) {
-    let payload = AnalyticsPayload::new(&interaction.as_str(), &diff.as_value());
+    let payload = AnalyticsPayload {
+        event: "ui_interaction",
+        page_name,
+        element_type: "wasm_egui",
+        interaction_type,
+        changes: changes.clone(),
+    };
 
-    let js_value = match serde_wasm_bindgen::to_value(&payload) {
+    let serializer = serde_wasm_bindgen::Serializer::new().serialize_maps_as_objects(true);
+    let js_value = match Serialize::serialize(&payload, &serializer) {
         Ok(v) => v,
         Err(_) => {
             web_sys::console::error_1(&"analytics: serialization failed".into());
@@ -173,8 +139,8 @@ fn dispatch_to_js(interaction: &InteractionType, diff: &StateDiff) {
         }
     };
 
-    let mut init = CustomEventInit::new();
-    init.detail(&js_value);
+    let init = CustomEventInit::new();
+    init.set_detail(&js_value);
 
     if let Ok(evt) = CustomEvent::new_with_event_init_dict("analytics_event", &init) {
         if let Some(win) = window() {

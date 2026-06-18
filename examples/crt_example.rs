@@ -3,7 +3,9 @@ use bevy::render::{render_graph::RenderGraphExt, RenderApp};
 use bevy::{core_pipeline::tonemapping::Tonemapping, prelude::*};
 use bevy_egui::{egui, render::graph::NodeEgui, EguiPlugin, EguiPrimaryContextPass};
 use bevy_retro_shaders::{CrtGlitch, CrtLabel, CrtPlugin, CrtSettings};
+use egui_events::{EguiEventEmitter, InteractionType};
 use serde::Serialize;
+use wasm_bindgen::prelude::wasm_bindgen;
 
 #[cfg(target_arch = "wasm32")]
 #[path = "common/analytics.rs"]
@@ -254,7 +256,7 @@ fn run_app() {
         primary_window: Some(Window {
             canvas: Some("#bevy-canvas".to_string()),
             fit_canvas_to_parent: true,
-            prevent_default_event_handling: false,
+            prevent_default_event_handling: true,
             ..default()
         }),
         ..default()
@@ -402,26 +404,33 @@ fn setup_scene(
 
 // ── UI ────────────────────────────────────────────────────────────────────────
 
-use egui_events::EguiUi;
-
-fn ui_controls(mut ui: EguiUi, mut state: ResMut<CrtState>, demo_images: Res<DemoImages>) {
-    if ui.keys.just_pressed(KeyCode::KeyH) {
-        state.panels_visible = !state.panels_visible;
-    }
-    if ui.keys.just_pressed(KeyCode::KeyC) {
-        state.enabled = !state.enabled;
-    }
-    if ui.keys.just_pressed(KeyCode::KeyG) {
-        state.glitch_enabled = !state.glitch_enabled;
-    }
-    if ui.keys.just_pressed(KeyCode::KeyB) {
-        state.bloom_enabled = !state.bloom_enabled;
-    }
-    if ui.keys.just_pressed(KeyCode::KeyT) {
-        state.tonemapping_enabled = !state.tonemapping_enabled;
-    }
-
+fn ui_controls(mut ui: EguiEventEmitter, mut state: ResMut<CrtState>, demo_images: Res<DemoImages>) {
     let ctx = ui.ctx_mut();
+
+    // DEBUG: log wants_keyboard_input value to see what it returns
+    #[cfg(target_arch = "wasm32")]
+    web_sys::console::log_1(
+        &format!("[crt_example] wants_keyboard_input: {:?}", ctx.wants_keyboard_input()).into(),
+    );
+
+    // Skip keyboard shortcuts when typing in text fields
+    if !ctx.wants_keyboard_input() {
+        if ui.keys.just_pressed(KeyCode::KeyH) {
+            state.panels_visible = !state.panels_visible;
+        }
+        if ui.keys.just_pressed(KeyCode::KeyC) {
+            state.enabled = !state.enabled;
+        }
+        if ui.keys.just_pressed(KeyCode::KeyG) {
+            state.glitch_enabled = !state.glitch_enabled;
+        }
+        if ui.keys.just_pressed(KeyCode::KeyB) {
+            state.bloom_enabled = !state.bloom_enabled;
+        }
+        if ui.keys.just_pressed(KeyCode::KeyT) {
+            state.tonemapping_enabled = !state.tonemapping_enabled;
+        }
+    }
 
     if !state.panels_visible {
         return;
@@ -440,15 +449,33 @@ fn ui_controls(mut ui: EguiUi, mut state: ResMut<CrtState>, demo_images: Res<Dem
         .show(&ctx, |eui| {
             eui.heading("▣ CRT Effect");
             eui.separator();
-            ui.checkbox(eui, &mut state.enabled, "Enabled");
+            ui.emit(
+                eui.checkbox(&mut state.enabled, "Enabled"),
+                InteractionType::Changed,
+            );
 
             if state.enabled {
                 eui.separator();
-                ui.slider(eui, &mut state.curvature, 0.0..=0.2, "Curvature");
-                ui.slider(eui, &mut state.chromatic, 0.0..=0.05, "Chromatic");
-                ui.slider(eui, &mut state.vignette, 0.0..=1.0, "Vignette");
-                ui.slider(eui, &mut state.scanlines, 0.0..=1.0, "Scanlines");
-                ui.slider(eui, &mut state.noise, 0.0..=0.25, "Noise / Grain");
+                ui.emit(
+                    eui.add(egui::Slider::new(&mut state.curvature, 0.0..=0.2).text("Curvature")),
+                    InteractionType::DragStopped,
+                );
+                ui.emit(
+                    eui.add(egui::Slider::new(&mut state.chromatic, 0.0..=0.05).text("Chromatic")),
+                    InteractionType::DragStopped,
+                );
+                ui.emit(
+                    eui.add(egui::Slider::new(&mut state.vignette, 0.0..=1.0).text("Vignette")),
+                    InteractionType::DragStopped,
+                );
+                ui.emit(
+                    eui.add(egui::Slider::new(&mut state.scanlines, 0.0..=1.0).text("Scanlines")),
+                    InteractionType::DragStopped,
+                );
+                ui.emit(
+                    eui.add(egui::Slider::new(&mut state.noise, 0.0..=0.25).text("Noise / Grain")),
+                    InteractionType::DragStopped,
+                );
             }
         });
 
@@ -457,29 +484,56 @@ fn ui_controls(mut ui: EguiUi, mut state: ResMut<CrtState>, demo_images: Res<Dem
         .show(&ctx, |eui| {
             eui.heading("⚡ Glitch");
             eui.separator();
-            ui.checkbox(eui, &mut state.glitch_enabled, "Enabled");
+            ui.emit(
+                eui.checkbox(&mut state.glitch_enabled, "Enabled"),
+                InteractionType::Changed,
+            );
 
             if state.glitch_enabled {
                 eui.separator();
-                ui.slider(eui, &mut state.glitch_intensity, 0.0..=1.0, "Intensity");
-                ui.slider(
-                    eui,
-                    &mut state.glitch_interval_min,
-                    0.5..=30.0,
-                    "Interval Min",
+                ui.emit(
+                    eui.add(
+                        egui::Slider::new(&mut state.glitch_intensity, 0.0..=1.0).text("Intensity"),
+                    ),
+                    InteractionType::DragStopped,
                 );
-                ui.slider(
-                    eui,
-                    &mut state.glitch_interval_max,
-                    1.0..=60.0,
-                    "Interval Max",
+                ui.emit(
+                    eui.add(
+                        egui::Slider::new(&mut state.glitch_interval_min, 0.5..=30.0)
+                            .text("Interval Min"),
+                    ),
+                    InteractionType::DragStopped,
                 );
-                ui.slider(eui, &mut state.glitch_duration, 0.05..=1.0, "Duration");
+                ui.emit(
+                    eui.add(
+                        egui::Slider::new(&mut state.glitch_interval_max, 1.0..=60.0)
+                            .text("Interval Max"),
+                    ),
+                    InteractionType::DragStopped,
+                );
+                ui.emit(
+                    eui.add(
+                        egui::Slider::new(&mut state.glitch_duration, 0.05..=1.0).text("Duration"),
+                    ),
+                    InteractionType::DragStopped,
+                );
                 eui.separator();
-                ui.checkbox(eui, &mut state.glitch_horizontal_shift, "Horizontal Shift");
-                ui.checkbox(eui, &mut state.glitch_rgb_split, "RGB Split");
-                ui.checkbox(eui, &mut state.glitch_noise, "Noise");
-                ui.checkbox(eui, &mut state.glitch_freeze, "Freeze");
+                ui.emit(
+                    eui.checkbox(&mut state.glitch_horizontal_shift, "Horizontal Shift"),
+                    InteractionType::Changed,
+                );
+                ui.emit(
+                    eui.checkbox(&mut state.glitch_rgb_split, "RGB Split"),
+                    InteractionType::Changed,
+                );
+                ui.emit(
+                    eui.checkbox(&mut state.glitch_noise, "Noise"),
+                    InteractionType::Changed,
+                );
+                ui.emit(
+                    eui.checkbox(&mut state.glitch_freeze, "Freeze"),
+                    InteractionType::Changed,
+                );
                 eui.separator();
                 eui.label("ENTER - Toggle Glitch");
             }
@@ -491,38 +545,71 @@ fn ui_controls(mut ui: EguiUi, mut state: ResMut<CrtState>, demo_images: Res<Dem
             eui.heading("Scene");
             eui.separator();
             eui.label("Content:");
-            ui.radio_value(eui, &mut state.selected_demo, 0, "Colors");
-            ui.radio_value(eui, &mut state.selected_demo, 1, "Images");
+            ui.emit(
+                eui.radio_value(&mut state.selected_demo, 0, "Colors"),
+                InteractionType::Changed,
+            );
+            ui.emit(
+                eui.radio_value(&mut state.selected_demo, 1, "Images"),
+                InteractionType::Changed,
+            );
             eui.separator();
-            ui.checkbox(eui, &mut state.show_sprite, "Show");
+            ui.emit(
+                eui.checkbox(&mut state.show_sprite, "Show"),
+                InteractionType::Changed,
+            );
 
             if state.selected_demo == 1 {
                 eui.separator();
                 eui.label("Image:");
                 for (i, name) in demo_images.names.iter().enumerate() {
-                    ui.radio_value(eui, &mut state.selected_image, i, name.as_str());
+                    ui.emit(
+                        eui.radio_value(&mut state.selected_image, i, name.as_str()),
+                        InteractionType::Changed,
+                    );
                 }
                 eui.separator();
                 eui.label("Display mode:");
-                ui.radio_value(eui, &mut state.image_mode, 0, "Sprite");
-                ui.radio_value(eui, &mut state.image_mode, 1, "Background");
+                ui.emit(
+                    eui.radio_value(&mut state.image_mode, 0, "Sprite"),
+                    InteractionType::Changed,
+                );
+                ui.emit(
+                    eui.radio_value(&mut state.image_mode, 1, "Background"),
+                    InteractionType::Changed,
+                );
             }
 
             eui.separator();
             eui.label("Text:");
-            ui.radio_value(eui, &mut state.text_demo, 0, "None");
-            ui.radio_value(eui, &mut state.text_demo, 1, "Title");
-            ui.radio_value(eui, &mut state.text_demo, 2, "Paragraph");
+            ui.emit(
+                eui.radio_value(&mut state.text_demo, 0, "None"),
+                InteractionType::Changed,
+            );
+            ui.emit(
+                eui.radio_value(&mut state.text_demo, 1, "Title"),
+                InteractionType::Changed,
+            );
+            ui.emit(
+                eui.radio_value(&mut state.text_demo, 2, "Paragraph"),
+                InteractionType::Changed,
+            );
 
             if state.text_demo == 1 {
                 eui.separator();
                 eui.label("Title:");
-                ui.text_edit_singleline(eui, &mut state.title_input, "Title");
+                ui.emit(
+                    eui.text_edit_singleline(&mut state.title_input),
+                    InteractionType::LostFocus,
+                );
             }
             if state.text_demo == 2 {
                 eui.separator();
                 eui.label("Paragraph:");
-                ui.text_edit_multiline(eui, &mut state.paragraph_input, "Paragraph");
+                ui.emit(
+                    eui.text_edit_multiline(&mut state.paragraph_input),
+                    InteractionType::LostFocus,
+                );
             }
         });
 
@@ -534,40 +621,79 @@ fn ui_controls(mut ui: EguiUi, mut state: ResMut<CrtState>, demo_images: Res<Dem
         .show(&ctx, |eui| {
             eui.heading("✨ Bloom");
             eui.separator();
-            ui.checkbox(eui, &mut state.bloom_enabled, "Enabled");
+            ui.emit(
+                eui.checkbox(&mut state.bloom_enabled, "Enabled"),
+                InteractionType::Changed,
+            );
 
             if state.bloom_enabled {
                 eui.separator();
                 eui.label("Preset:");
-                ui.radio_value(eui, &mut state.bloom_preset, 0, "Natural");
-                ui.radio_value(eui, &mut state.bloom_preset, 1, "Old School");
-                ui.radio_value(eui, &mut state.bloom_preset, 2, "Screen Blur");
-                ui.radio_value(eui, &mut state.bloom_preset, 3, "Anamorphic");
-                ui.radio_value(eui, &mut state.bloom_preset, 4, "Custom");
+                ui.emit(
+                    eui.radio_value(&mut state.bloom_preset, 0, "Natural"),
+                    InteractionType::Changed,
+                );
+                ui.emit(
+                    eui.radio_value(&mut state.bloom_preset, 1, "Old School"),
+                    InteractionType::Changed,
+                );
+                ui.emit(
+                    eui.radio_value(&mut state.bloom_preset, 2, "Screen Blur"),
+                    InteractionType::Changed,
+                );
+                ui.emit(
+                    eui.radio_value(&mut state.bloom_preset, 3, "Anamorphic"),
+                    InteractionType::Changed,
+                );
+                ui.emit(
+                    eui.radio_value(&mut state.bloom_preset, 4, "Custom"),
+                    InteractionType::Changed,
+                );
 
                 if state.bloom_preset == 4 {
                     eui.separator();
                     eui.label("Custom:");
-                    ui.slider(eui, &mut state.bloom_intensity, 0.0..=1.0, "Intensity");
-                    ui.slider(
-                        eui,
-                        &mut state.bloom_low_freq_boost,
-                        0.0..=1.0,
-                        "Low Freq Boost",
+                    ui.emit(
+                        eui.add(
+                            egui::Slider::new(&mut state.bloom_intensity, 0.0..=1.0)
+                                .text("Intensity"),
+                        ),
+                        InteractionType::DragStopped,
                     );
-                    ui.slider(
-                        eui,
-                        &mut state.bloom_low_freq_boost_curve,
-                        0.0..=1.0,
-                        "Boost Curve",
+                    ui.emit(
+                        eui.add(
+                            egui::Slider::new(&mut state.bloom_low_freq_boost, 0.0..=1.0)
+                                .text("Low Freq Boost"),
+                        ),
+                        InteractionType::DragStopped,
                     );
-                    ui.slider(eui, &mut state.bloom_high_pass, 0.0..=1.0, "High Pass");
-                    ui.slider(eui, &mut state.bloom_threshold, 0.0..=1.0, "Threshold");
-                    ui.slider(
-                        eui,
-                        &mut state.bloom_threshold_softness,
-                        0.0..=1.0,
-                        "Threshold Softness",
+                    ui.emit(
+                        eui.add(
+                            egui::Slider::new(&mut state.bloom_low_freq_boost_curve, 0.0..=1.0)
+                                .text("Boost Curve"),
+                        ),
+                        InteractionType::DragStopped,
+                    );
+                    ui.emit(
+                        eui.add(
+                            egui::Slider::new(&mut state.bloom_high_pass, 0.0..=1.0)
+                                .text("High Pass"),
+                        ),
+                        InteractionType::DragStopped,
+                    );
+                    ui.emit(
+                        eui.add(
+                            egui::Slider::new(&mut state.bloom_threshold, 0.0..=1.0)
+                                .text("Threshold"),
+                        ),
+                        InteractionType::DragStopped,
+                    );
+                    ui.emit(
+                        eui.add(
+                            egui::Slider::new(&mut state.bloom_threshold_softness, 0.0..=1.0)
+                                .text("Threshold Softness"),
+                        ),
+                        InteractionType::DragStopped,
                     );
                 }
             }
@@ -579,18 +705,42 @@ fn ui_controls(mut ui: EguiUi, mut state: ResMut<CrtState>, demo_images: Res<Dem
         .show(&ctx, |eui| {
             eui.heading("🎨 Tonemapping");
             eui.separator();
-            ui.checkbox(eui, &mut state.tonemapping_enabled, "Enabled");
+            ui.emit(
+                eui.checkbox(&mut state.tonemapping_enabled, "Enabled"),
+                InteractionType::Changed,
+            );
 
             if state.tonemapping_enabled {
                 eui.separator();
                 eui.label("Preset:");
-                ui.radio_value(eui, &mut state.tonemapping, 1, "Reinhard");
-                ui.radio_value(eui, &mut state.tonemapping, 2, "Reinhard Luminance");
-                ui.radio_value(eui, &mut state.tonemapping, 3, "ACES Fitted");
-                ui.radio_value(eui, &mut state.tonemapping, 4, "AgX");
-                ui.radio_value(eui, &mut state.tonemapping, 5, "Somewhat Boring");
-                ui.radio_value(eui, &mut state.tonemapping, 6, "Tony McMapface ✓");
-                ui.radio_value(eui, &mut state.tonemapping, 7, "Blender Filmic");
+                ui.emit(
+                    eui.radio_value(&mut state.tonemapping, 1, "Reinhard"),
+                    InteractionType::Changed,
+                );
+                ui.emit(
+                    eui.radio_value(&mut state.tonemapping, 2, "Reinhard Luminance"),
+                    InteractionType::Changed,
+                );
+                ui.emit(
+                    eui.radio_value(&mut state.tonemapping, 3, "ACES Fitted"),
+                    InteractionType::Changed,
+                );
+                ui.emit(
+                    eui.radio_value(&mut state.tonemapping, 4, "AgX"),
+                    InteractionType::Changed,
+                );
+                ui.emit(
+                    eui.radio_value(&mut state.tonemapping, 5, "Somewhat Boring"),
+                    InteractionType::Changed,
+                );
+                ui.emit(
+                    eui.radio_value(&mut state.tonemapping, 6, "Tony McMapface ✓"),
+                    InteractionType::Changed,
+                );
+                ui.emit(
+                    eui.radio_value(&mut state.tonemapping, 7, "Blender Filmic"),
+                    InteractionType::Changed,
+                );
             }
         });
 

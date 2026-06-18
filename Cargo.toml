@@ -52,6 +52,7 @@ features = [
 "Window",
 "Document",
 "HtmlCanvasElement",
+"Location",
 "Worker",
 "MessageEvent",
 "OffscreenCanvas",

@@ -109,7 +109,10 @@ document.addEventListener('DOMContentLoaded', () => {
 // Always active, even before DOMContentLoaded
 window.addEventListener("analytics_event", (e) => {
   if (!e.detail) return;
-  window.dataLayer.push(e.detail);
+  console.log(window.dataLayer);
+  // GTM deep-merge les objets imbriqués → on reset changes avant de push
+  // window.dataLayer.push({ changes: undefined });
+  window.dataLayer.push({ ...e.detail, _clear: true });
   if (typeof __DEV__ !== 'undefined') {
     console.debug('[analytics]', e.detail);
   }
