@@ -5,7 +5,6 @@ use bevy_egui::{egui, render::graph::NodeEgui, EguiPlugin, EguiPrimaryContextPas
 use bevy_retro_shaders::{CrtGlitch, CrtLabel, CrtPlugin, CrtSettings};
 use egui_events::{EguiEventEmitter, InteractionType};
 use serde::Serialize;
-use wasm_bindgen::prelude::wasm_bindgen;
 
 #[cfg(target_arch = "wasm32")]
 #[path = "common/analytics.rs"]
@@ -404,14 +403,12 @@ fn setup_scene(
 
 // ── UI ────────────────────────────────────────────────────────────────────────
 
-fn ui_controls(mut ui: EguiEventEmitter, mut state: ResMut<CrtState>, demo_images: Res<DemoImages>) {
+fn ui_controls(
+    mut ui: EguiEventEmitter,
+    mut state: ResMut<CrtState>,
+    demo_images: Res<DemoImages>,
+) {
     let ctx = ui.ctx_mut();
-
-    // DEBUG: log wants_keyboard_input value to see what it returns
-    #[cfg(target_arch = "wasm32")]
-    web_sys::console::log_1(
-        &format!("[crt_example] wants_keyboard_input: {:?}", ctx.wants_keyboard_input()).into(),
-    );
 
     // Skip keyboard shortcuts when typing in text fields
     if !ctx.wants_keyboard_input() {

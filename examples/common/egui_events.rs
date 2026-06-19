@@ -4,6 +4,7 @@ use bevy_egui::{egui, EguiContexts};
 
 #[derive(Message, Clone)]
 pub struct UiEvent {
+    #[cfg_attr(not(target_arch = "wasm32"), allow(dead_code))]
     pub interaction_type: String,
 }
 
