@@ -90,12 +90,4 @@ document.addEventListener('DOMContentLoaded', () => {
             if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
         });
     });
-
-    // Hide loading message on load
-    window.addEventListener('load', () => {
-        setTimeout(() => {
-            const loading = document.getElementById('loading-message');
-            if (loading) loading.style.display = 'none';
-        }, 2000);
-    });
 });

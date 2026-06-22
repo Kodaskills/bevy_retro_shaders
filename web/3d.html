@@ -34,15 +34,15 @@
         <!-- ═══ HEADER ═══ -->
         <header class="header">
             <div class="header-content">
-                <a href="index.html" class="logo">Kodaskills</a>
+                <a href="index.html" class="logo" data-analytics="click_logo_kodaskills">Kodaskills</a>
 
-<div class="header-actions">
-                    <a target="_blank" rel="noopener noreferrer" href="https://github.com/kodaskills/bevy_retro_shaders" class="theme-toggle" aria-label="GitHub">
+                <div class="header-actions">
+                    <a target="_blank" rel="noopener noreferrer" href="https://github.com/kodaskills/bevy_retro_shaders" class="theme-toggle" data-analytics="click_github" aria-label="GitHub">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
                             <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
                         </svg>
                     </a>
-                    <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+                    <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-analytics="click_theme_toggle">
                         <svg id="moonIcon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
                         </svg>
@@ -59,7 +59,7 @@
             <section class="demo-section">
                 <div class="demo-container">
 
-                    <a href="/" class="back-link">
+                    <a href="/" class="back-link" data-analytics="click_back_to_home">
                         <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
                         Back to Home
                     </a>
@@ -103,22 +103,22 @@
                 <div class="footer-nav">
                     <div class="footer-nav-column">
                         <h4>Project</h4>
-                        <a target="_blank" rel="noopener noreferrer" href="https://github.com/kodaskills/bevy_retro_shaders">GitHub</a>
-                        <a target="_blank" rel="noopener noreferrer" href="https://crates.io/crates/bevy_retro_shaders">crates.io</a>
-                        <a target="_blank" rel="noopener noreferrer" href="https://github.com/kodaskills/bevy_retro_shaders/blob/main/CHANGELOG.md">Changelog</a>
-                        <a target="_blank" rel="noopener noreferrer" href="https://github.com/kodaskills/bevy_retro_shaders/blob/main/CONTRIBUTING.md">Contributing</a>
+                        <a target="_blank" rel="noopener noreferrer" href="https://github.com/kodaskills/bevy_retro_shaders" data-analytics="click_github_footer_project">GitHub</a>
+                        <a target="_blank" rel="noopener noreferrer" href="https://crates.io/crates/bevy_retro_shaders" data-analytics="click_cratesio_footer_project">crates.io</a>
+                        <a target="_blank" rel="noopener noreferrer" href="https://github.com/kodaskills/bevy_retro_shaders/blob/main/CHANGELOG.md" data-analytics="click_changelog_footer">Changelog</a>
+                        <a target="_blank" rel="noopener noreferrer" href="https://github.com/kodaskills/bevy_retro_shaders/blob/main/CONTRIBUTING.md" data-analytics="click_contributing_footer">Contributing</a>
                     </div>
                     <div class="footer-nav-column">
                         <h4>Resources</h4>
-                        <a target="_blank" rel="noopener noreferrer" href="https://github.com/kodaskills/bevy_retro_shaders#readme">Documentation</a>
-                        <a target="_blank" rel="noopener noreferrer" href="https://github.com/kodaskills/bevy_retro_shaders/issues">Issues</a>
-                        <a target="_blank" rel="noopener noreferrer" href="https://github.com/kodaskills/bevy_retro_shaders/releases">Releases</a>
-                        <a target="_blank" rel="noopener noreferrer" href="https://github.com/kodaskills/bevy_retro_shaders/blob/main/LICENSE">License (MIT)</a>
+                        <a target="_blank" rel="noopener noreferrer" href="https://github.com/kodaskills/bevy_retro_shaders#readme" data-analytics="click_docs_footer">Documentation</a>
+                        <a target="_blank" rel="noopener noreferrer" href="https://github.com/kodaskills/bevy_retro_shaders/issues" data-analytics="click_issues_footer">Issues</a>
+                        <a target="_blank" rel="noopener noreferrer" href="https://github.com/kodaskills/bevy_retro_shaders/releases" data-analytics="click_releases_footer">Releases</a>
+                        <a target="_blank" rel="noopener noreferrer" href="https://github.com/kodaskills/bevy_retro_shaders/blob/main/LICENSE" data-analytics="click_license_footer">License (MIT)</a>
                     </div>
                     <div class="footer-nav-column">
                         <h4>Connect</h4>
-                        <a target="_blank" rel="noopener noreferrer" href="https://github.com/kodaskills">GitHub</a>
-                        <a target="_blank" rel="noopener noreferrer" href="https://kodaskills.co">Website</a>
+                        <a target="_blank" rel="noopener noreferrer" href="https://github.com/kodaskills" data-analytics="click_github_footer_connect">GitHub</a>
+                        <a target="_blank" rel="noopener noreferrer" href="https://kodaskills.co" data-analytics="click_website_footer_connect">Website</a>
                     </div>
                 </div>
             </div>
@@ -128,10 +128,10 @@
                     © 2026 <a target="_blank" rel="noopener noreferrer" href="https://kodaskills.co">KODASKILLS</a> • ALL RIGHTS RESERVED
                 </div>
                 <div class="footer-badges">
-                    <a target="_blank" rel="noopener noreferrer" href="https://crates.io/crates/bevy_retro_shaders">
+                    <a target="_blank" rel="noopener noreferrer" href="https://crates.io/crates/bevy_retro_shaders" data-analytics="click_cratesio_footer_badge">
                         <img src="https://img.shields.io/crates/v/bevy_retro_shaders?style=for-the-badge&logo=rust&color=orange" alt="Crates.io">
                     </a>
-                    <a target="_blank" rel="noopener noreferrer" href="https://github.com/kodaskills/bevy_retro_shaders/blob/main/LICENSE">
+                    <a target="_blank" rel="noopener noreferrer" href="https://github.com/kodaskills/bevy_retro_shaders/blob/main/LICENSE" data-analytics="click_license_footer_badge">
                         <img src="https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge" alt="License">
                     </a>
                 </div>
@@ -139,5 +139,6 @@
         </footer>
     </div>
 
+<script data-trunk src="assets/js/analytics.js"></script>
 </body>
 </html>
