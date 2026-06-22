@@ -35,6 +35,7 @@ const uiInteractionMap = {
   click_01_features:      { element_type: "link",   element_name: "01_features",       interaction_type: "click", element_location: "header", page_name: "demo" },
   click_02_controls:      { element_type: "link",   element_name: "02_controls",       interaction_type: "click", element_location: "header", page_name: "demo" },
   click_03_demo:          { element_type: "link",   element_name: "03_demo",           interaction_type: "click", element_location: "header", page_name: "demo" },
+  click_04_demo_3d:       { element_type: "link",   element_name: "04_demo_3d",        interaction_type: "click", element_location: "header", page_name: "demo" },
   click_github_hero_meta: { element_type: "link",   element_name: "GitHub",            interaction_type: "click", element_location: "hero",   page_name: "demo" },
   click_try_demo:         { element_type: "button", element_name: "try_demo",          interaction_type: "click", element_location: "header", page_name: "demo" },
   click_try_3d_demo:      { element_type: "button", element_name: "try_3d_demo",       interaction_type: "click", element_location: "body",   page_name: "demo" },
