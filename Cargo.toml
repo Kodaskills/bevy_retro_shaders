@@ -16,7 +16,7 @@ serde_json = "1"
 
 
 [dependencies.bevy]
-version = "0.18"
+version = "0.19"
 default-features = false
 
 
@@ -26,7 +26,7 @@ features = [ "derive" ]
 
 
 [dependencies.bevy_egui]
-version = "0.39"
+version = "0.40.1"
 optional = true
 
 
@@ -81,16 +81,17 @@ version = "0.1"
 optional = true
 
 
-[target."cfg(target_arch = \"wasm32\")".dependencies.getrandom]
-version = "0.4"
-features = [ "wasm_js" ]
-
 [target."cfg(target_arch = \"wasm32\")".dependencies]
 serde-wasm-bindgen = "0.6"
 
 
+[target."cfg(target_arch = \"wasm32\")".dependencies.getrandom]
+version = "0.4"
+features = [ "wasm_js" ]
+
+
 [dev-dependencies.bevy]
-version = "0.18"
+version = "0.19"
 features = [ "debug" ]
 
 
@@ -131,7 +132,7 @@ web = [
 "bevy/bevy_gizmos_render",
 "bevy/bevy_asset",
 "bevy/bevy_winit",
-"bevy/bevy_scene",
+"bevy/bevy_world_serialization",
 "bevy/bevy_state",
 "bevy/bevy_picking",
 "bevy/default_font",
@@ -162,7 +163,7 @@ native = [
 "bevy/bevy_gizmos_render",
 "bevy/bevy_asset",
 "bevy/bevy_winit",
-"bevy/bevy_scene",
+"bevy/bevy_world_serialization",
 "bevy/bevy_state",
 "bevy/bevy_picking",
 "bevy/default_font",

@@ -2,7 +2,7 @@
 
 # Bevy Retro Shader
 
-### Retro post-processing shaders for **Bevy 0.18+** — CRT curvature, scanlines, chromatic aberration, vignette, and glitch effects. Works on **Camera2d** and **Camera3d**.
+### Retro post-processing shaders for **Bevy 0.19+** — CRT curvature, scanlines, chromatic aberration, vignette, and glitch effects. Works on **Camera2d** and **Camera3d**.
 
 [![Crates.io](https://img.shields.io/crates/v/bevy_retro_shaders?style=for-the-badge&logo=rust&color=orange)](https://crates.io/crates/bevy_retro_shaders)
 [![License](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](LICENSE)
@@ -12,9 +12,9 @@
 
 ### Built with:
 [![Rust](https://img.shields.io/badge/Rust-2021-CE422B?style=for-the-badge&logo=rust&logoColor=white)](https://www.rust-lang.org)
-[![Bevy](https://img.shields.io/badge/Bevy-0.18-232326?style=for-the-badge)](https://bevyengine.org)
+[![Bevy](https://img.shields.io/badge/Bevy-0.19-232326?style=for-the-badge)](https://bevyengine.org)
 [![WGSL](https://img.shields.io/badge/WGSL-Shader-6A0DAD?style=for-the-badge)](https://gpuweb.github.io/gpuweb/wgsl/)
-[![egui](https://img.shields.io/badge/egui-0.31-5B8FB9?style=for-the-badge)](https://github.com/emilk/egui)
+[![egui](https://img.shields.io/badge/egui-0.34-5B8FB9?style=for-the-badge)](https://github.com/emilk/egui)
 
 </div>
 
@@ -43,7 +43,7 @@
 ### Prerequisites
 
 - [Rust](https://www.rust-lang.org/tools/install) (stable)
-- [Bevy 0.18](https://bevyengine.org)
+- [Bevy 0.19](https://bevyengine.org)
 
 ### Quick Start
 
@@ -167,7 +167,7 @@ commands.spawn((
 ### Full retro CRT with glitches
 
 ```rust
-use bevy::render::view::Hdr;
+use bevy::camera::Hdr;
 use bevy::core_pipeline::tonemapping::Tonemapping;
 use bevy::post_process::bloom::Bloom;
 
@@ -225,14 +225,14 @@ cargo run --example crt_3d_example --features examples
 
 ---
 
-## 🔧 Render Graph Position
+## 🔧 Render Pipeline Position
 
-The CRT node is inserted in both pipelines:
+The CRT effect runs as a post-process system in both pipelines:
 
 | Pipeline | Position |
 |----------|----------|
-| `Core2d` | After `EndMainPassPostProcessing`, before `NodeUi::UiPass` |
-| `Core3d` | After `EndMainPassPostProcessing`, before `Upscaling` |
+| `Core2d` | `PostProcess` set (after bloom/tonemapping, before egui) |
+| `Core3d` | `PostProcess` set (after bloom/tonemapping) |
 
 UI (egui, Bevy UI) is rendered **after** the CRT pass — the overlay is never affected by the effect.
 
@@ -254,6 +254,7 @@ hot_reload = ["bevy/file_watcher"] # Asset hot-reloading
 
 | `bevy` | `bevy_retro_shaders` |
 | ------ | -------------------- |
+| 0.19   | 0.1.2+               |
 | 0.18   | 0.1+                 |
 
 ---

@@ -5,25 +5,20 @@
 use bevy::asset::{embedded_asset, load_embedded_asset};
 use bevy::{
     core_pipeline::{
-        core_2d::graph::{Core2d, Node2d},
-        core_3d::graph::{Core3d, Node3d},
+        schedule::{Core2d, Core2dSystems, Core3d, Core3dSystems},
         FullscreenShader,
     },
-    ecs::query::QueryItem,
     prelude::*,
     render::{
         extract_component::{
             ComponentUniforms, DynamicUniformIndex, ExtractComponent, ExtractComponentPlugin,
             UniformComponentPlugin,
         },
-        render_graph::{
-            NodeRunError, RenderGraphContext, RenderGraphExt, RenderLabel, ViewNode, ViewNodeRunner,
-        },
         render_resource::{
             binding_types::{sampler, texture_2d, uniform_buffer},
             *,
         },
-        renderer::{RenderContext, RenderDevice},
+        renderer::{RenderContext, RenderDevice, ViewQuery},
         view::{ExtractedView, ViewTarget},
         Render, RenderApp, RenderStartup, RenderSystems,
     },
@@ -199,12 +194,8 @@ impl Plugin for CrtPlugin {
 
         render_app.add_systems(Render, prepare_crt_pipelines.in_set(RenderSystems::Prepare));
 
-        render_app
-            .add_render_graph_node::<ViewNodeRunner<CrtNode>>(Core2d, CrtLabel)
-            .add_render_graph_edge(Core2d, Node2d::EndMainPassPostProcessing, CrtLabel)
-            .add_render_graph_node::<ViewNodeRunner<CrtNode>>(Core3d, CrtLabel)
-            .add_render_graph_edge(Core3d, Node3d::EndMainPassPostProcessing, CrtLabel)
-            .add_render_graph_edge(Core3d, CrtLabel, Node3d::Upscaling);
+        render_app.add_systems(Core2d, crt_post_process.in_set(Core2dSystems::PostProcess));
+        render_app.add_systems(Core3d, crt_post_process.in_set(Core3dSystems::PostProcess));
     }
 }
 
@@ -246,75 +237,63 @@ fn update_crt_glitch(time: Res<Time>, mut query: Query<(&mut CrtSettings, &mut C
 
 // ─── Render graph ────────────────────────────────────────────────────────────
 
-#[derive(Debug, Hash, PartialEq, Eq, Clone, RenderLabel)]
-pub struct CrtLabel;
+#[derive(Component)]
+struct ViewCrtPipeline(CachedRenderPipelineId);
 
-#[derive(Default)]
-struct CrtNode;
+fn crt_post_process(
+    view: ViewQuery<(
+        &ViewTarget,
+        &ViewCrtPipeline,
+        &DynamicUniformIndex<CrtSettings>,
+    )>,
+    pipeline_cache: Res<PipelineCache>,
+    crt_pipeline: Res<CrtPipeline>,
+    settings_uniforms: Res<ComponentUniforms<CrtSettings>>,
+    mut ctx: RenderContext,
+) {
+    let (view_target, view_pipeline, settings_index) = view.into_inner();
 
-impl ViewNode for CrtNode {
-    type ViewQuery = (
-        &'static ViewTarget,
-        &'static ViewCrtPipeline,
-        &'static DynamicUniformIndex<CrtSettings>,
+    let Some(render_pipeline) = pipeline_cache.get_render_pipeline(view_pipeline.0) else {
+        return;
+    };
+
+    let Some(settings_binding) = settings_uniforms.uniforms().binding() else {
+        return;
+    };
+
+    let post_process = view_target.post_process_write();
+
+    let bind_group = ctx.render_device().create_bind_group(
+        "crt_bind_group",
+        &pipeline_cache.get_bind_group_layout(&crt_pipeline.layout),
+        &BindGroupEntries::sequential((
+            post_process.source,
+            &crt_pipeline.sampler,
+            settings_binding.clone(),
+        )),
     );
 
-    fn run(
-        &self,
-        _graph: &mut RenderGraphContext,
-        render_context: &mut RenderContext,
-        (view_target, view_pipeline, settings_index): QueryItem<Self::ViewQuery>,
-        world: &World,
-    ) -> Result<(), NodeRunError> {
-        let pipeline_cache = world.resource::<PipelineCache>();
-        let crt_pipeline = world.resource::<CrtPipeline>();
+    let pass_descriptor = RenderPassDescriptor {
+        label: Some("crt_pass"),
+        color_attachments: &[Some(RenderPassColorAttachment {
+            view: post_process.destination,
+            depth_slice: None,
+            resolve_target: None,
+            ops: Operations::default(),
+        })],
+        depth_stencil_attachment: None,
+        timestamp_writes: None,
+        occlusion_query_set: None,
+        multiview_mask: None,
+    };
 
-        let Some(render_pipeline) = pipeline_cache.get_render_pipeline(view_pipeline.0) else {
-            return Ok(());
-        };
-
-        let settings_uniforms = world.resource::<ComponentUniforms<CrtSettings>>();
-        let Some(settings_binding) = settings_uniforms.uniforms().binding() else {
-            return Ok(());
-        };
-
-        let post_process = view_target.post_process_write();
-
-        let bind_group = render_context.render_device().create_bind_group(
-            "crt_bind_group",
-            &pipeline_cache.get_bind_group_layout(&crt_pipeline.layout),
-            &BindGroupEntries::sequential((
-                post_process.source,
-                &crt_pipeline.sampler,
-                settings_binding.clone(),
-            )),
-        );
-
-        let mut render_pass = render_context.begin_tracked_render_pass(RenderPassDescriptor {
-            label: Some("crt_pass"),
-            color_attachments: &[Some(RenderPassColorAttachment {
-                view: post_process.destination,
-                depth_slice: None,
-                resolve_target: None,
-                ops: Operations::default(),
-            })],
-            depth_stencil_attachment: None,
-            timestamp_writes: None,
-            occlusion_query_set: None,
-        });
-
-        render_pass.set_render_pipeline(render_pipeline);
-        render_pass.set_bind_group(0, &bind_group, &[settings_index.index()]);
-        render_pass.draw(0..3, 0..1);
-
-        Ok(())
-    }
+    let mut render_pass = ctx.begin_tracked_render_pass(pass_descriptor);
+    render_pass.set_render_pipeline(render_pipeline);
+    render_pass.set_bind_group(0, &bind_group, &[settings_index.index()]);
+    render_pass.draw(0..3, 0..1);
 }
 
 // ─── Pipeline ───────────────────────────────────────────────────────────────
-
-#[derive(Component)]
-struct ViewCrtPipeline(CachedRenderPipelineId);
 
 #[derive(Resource)]
 struct CrtPipeline {
@@ -354,12 +333,7 @@ fn prepare_crt_pipelines(
     views: Query<(Entity, &ExtractedView), With<CrtSettings>>,
 ) {
     for (entity, view) in views.iter() {
-        let format = if view.hdr {
-            ViewTarget::TEXTURE_FORMAT_HDR
-        } else {
-            TextureFormat::bevy_default()
-        };
-        let pipeline_id = pipelines.specialize(&pipeline_cache, &crt_pipeline, format);
+        let pipeline_id = pipelines.specialize(&pipeline_cache, &crt_pipeline, view.target_format);
         commands.entity(entity).insert(ViewCrtPipeline(pipeline_id));
     }
 }

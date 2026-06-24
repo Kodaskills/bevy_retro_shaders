@@ -5,4 +5,4 @@
 
 pub mod crt;
 
-pub use crt::{CrtGlitch, CrtLabel, CrtPlugin, CrtSettings};
+pub use crt::{CrtGlitch, CrtPlugin, CrtSettings};
