@@ -25,7 +25,7 @@ assignees: ''
 ## Environment
 
 - **OS**: <!-- e.g., macOS 14.2, Windows 11, Ubuntu 22.04 -->
-- **Bevy Version**: <!-- e.g., 0.18 -->
+- **Bevy Version**: <!-- e.g., 0.19 -->
 - **bevy_retro_shaders Version**: <!-- e.g., 0.1.0 -->
 - **Rust Version**: <!-- Run `rustc --version` -->
 
