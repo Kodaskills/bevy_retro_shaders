@@ -12,6 +12,9 @@ mod analytics;
 #[path = "common/egui_events.rs"]
 mod egui_events;
 
+#[cfg(target_arch = "wasm32")]
+use wasm_bindgen::prelude::*;
+
 // ── Resources ────────────────────────────────────────────────────────────────
 
 #[derive(Resource, Default)]
