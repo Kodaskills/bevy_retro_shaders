@@ -96,7 +96,7 @@ fn process_analytics(
     // Don't report keyboard presses when user is typing in an egui text field
     let wants_keyboard = egui_ctx
         .ctx_mut()
-        .is_ok_and(|ctx| ctx.wants_keyboard_input());
+        .is_ok_and(|ctx| ctx.egui_wants_keyboard_input());
     if !wants_keyboard {
         for ev in key_reader.read() {
             if ev.state == ButtonState::Pressed && TRACKED_KEYS.contains(&ev.key_code) {

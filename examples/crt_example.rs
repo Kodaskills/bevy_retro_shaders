@@ -1,9 +1,13 @@
-use bevy::post_process::bloom::{Bloom, BloomCompositeMode, BloomPrefilter};
-use bevy::render::{render_graph::RenderGraphExt, RenderApp};
-use bevy::{core_pipeline::tonemapping::Tonemapping, prelude::*};
-use bevy_egui::{egui, render::graph::NodeEgui, EguiPlugin, EguiPrimaryContextPass};
-use bevy_retro_shaders::{CrtGlitch, CrtLabel, CrtPlugin, CrtSettings};
-use egui_events::{EguiEventEmitter, InteractionType};
+use bevy::{
+    camera::Hdr,
+    core_pipeline::tonemapping::Tonemapping,
+    post_process::bloom::{Bloom, BloomCompositeMode, BloomPrefilter},
+    prelude::*,
+    render::RenderApp,
+};
+use bevy_egui::{egui, EguiPlugin, EguiPrimaryContextPass};
+use bevy_retro_shaders::{CrtGlitch, CrtPlugin, CrtSettings};
+use egui_events::{EguiEventEmitter, EguiEventsPlugin, InteractionType};
 use serde::Serialize;
 
 #[cfg(target_arch = "wasm32")]
@@ -211,20 +215,19 @@ fn append_key(job: &mut egui::text::LayoutJob, key: &str, label: &str, color: eg
 }
 
 // ── Egui ordering ─────────────────────────────────────────────────────────────
-// Ensure egui draws AFTER CRT, so panels are not affected by the shader.
+// Ensure egui draws after CRT so panels are not affected by the shader.
 
 struct EguiAfterCrtPlugin;
 
 impl Plugin for EguiAfterCrtPlugin {
     fn build(&self, app: &mut App) {
-        use bevy::core_pipeline::core_2d::graph::Core2d;
-
         let Some(render_app) = app.get_sub_app_mut(RenderApp) else {
             return;
         };
-        // CrtPlugin already adds EndMainPassPostProcessing → CrtLabel.
-        // This edge ensures egui draws AFTER CRT, keeping panels shader-free.
-        render_app.add_render_graph_edge(Core2d, CrtLabel, NodeEgui::EguiPass);
+        render_app.configure_sets(
+            bevy::core_pipeline::Core2d,
+            bevy::core_pipeline::Core2dSystems::PostProcess.before(bevy_egui::render::egui_pass),
+        );
     }
 }
 
@@ -284,7 +287,8 @@ fn run_app() {
 
     app.add_plugins(EguiPlugin::default())
         .add_plugins(CrtPlugin)
-        .add_plugins(EguiAfterCrtPlugin);
+        .add_plugins(EguiAfterCrtPlugin)
+        .add_plugins(EguiEventsPlugin);
     #[cfg(target_arch = "wasm32")]
     app.add_plugins(analytics::AnalyticsPlugin);
     app.add_systems(Startup, setup_scene)
@@ -353,7 +357,7 @@ fn setup_scene(
     #[cfg(not(target_arch = "wasm32"))]
     commands.spawn((
         Camera2d,
-        bevy::render::view::Hdr,
+        Hdr,
         CrtSettings::default(),
         CrtGlitch::new(0.0, 10.0, 20.0, 0.15),
         Tonemapping::TonyMcMapface,
@@ -362,7 +366,7 @@ fn setup_scene(
     #[cfg(target_arch = "wasm32")]
     commands.spawn((
         Camera2d,
-        bevy::render::view::Hdr,
+        Hdr,
         CrtSettings::default(),
         CrtGlitch::new(0.0, 10.0, 20.0, 0.15),
         Tonemapping::TonyMcMapface,
@@ -414,7 +418,7 @@ fn ui_controls(
     let ctx = ui.ctx_mut();
 
     // Skip keyboard shortcuts when typing in text fields
-    if !ctx.wants_keyboard_input() {
+    if !ctx.egui_wants_keyboard_input() {
         if ui.keys.just_pressed(KeyCode::KeyH) {
             state.panels_visible = !state.panels_visible;
         }
@@ -744,7 +748,8 @@ fn ui_controls(
             }
         });
 
-    egui::TopBottomPanel::bottom("shortcuts").show(&ctx, |eui| {
+    #[allow(deprecated)]
+    egui::Panel::bottom("shortcuts").show(&ctx, |eui| {
         eui.with_layout(egui::Layout::top_down(egui::Align::Center), |eui| {
             eui.label(shortcuts_label());
         });
@@ -945,7 +950,7 @@ fn update_text_display(
                 DemoTextMarker,
                 Text2d::new(state.title_input.clone()),
                 TextFont {
-                    font_size: 64.0,
+                    font_size: FontSize::Px(64.0),
                     ..default()
                 },
                 TextColor(Color::srgb(1.0, 0.95, 0.8)),
@@ -972,11 +977,11 @@ fn update_text_display(
                     },
                     Text::new(state.paragraph_input.clone()),
                     TextFont {
-                        font_size: 28.0,
+                        font_size: FontSize::Px(28.0),
                         ..default()
                     },
                     TextColor(Color::srgb(0.95, 0.9, 0.75)),
-                    TextLayout::new_with_justify(Justify::Center),
+                    TextLayout::justify(Justify::Center),
                 ));
             })
             .id(),

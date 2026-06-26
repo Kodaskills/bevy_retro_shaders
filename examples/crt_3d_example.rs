@@ -2,13 +2,14 @@
 // Demonstrates CRT post-processing on a Camera3d with full controls.
 
 use bevy::{
+    camera::Hdr,
     core_pipeline::tonemapping::Tonemapping,
     post_process::bloom::{Bloom, BloomCompositeMode, BloomPrefilter},
     prelude::*,
-    render::{render_graph::RenderGraphExt, view::Hdr, RenderApp},
+    render::RenderApp,
 };
-use bevy_egui::{egui, render::graph::NodeEgui, EguiContexts, EguiPlugin, EguiPrimaryContextPass};
-use bevy_retro_shaders::{CrtGlitch, CrtLabel, CrtPlugin, CrtSettings};
+use bevy_egui::{egui, EguiContexts, EguiPlugin, EguiPrimaryContextPass};
+use bevy_retro_shaders::{CrtGlitch, CrtPlugin, CrtSettings};
 
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
@@ -171,11 +172,13 @@ pub fn main_wasm() {
 struct EguiAfterCrtPlugin;
 impl Plugin for EguiAfterCrtPlugin {
     fn build(&self, app: &mut App) {
-        use bevy::core_pipeline::core_3d::graph::Core3d;
         let Some(render_app) = app.get_sub_app_mut(RenderApp) else {
             return;
         };
-        render_app.add_render_graph_edge(Core3d, CrtLabel, NodeEgui::EguiPass);
+        render_app.configure_sets(
+            bevy::core_pipeline::Core3d,
+            bevy::core_pipeline::Core3dSystems::PostProcess.before(bevy_egui::render::egui_pass),
+        );
     }
 }
 
@@ -272,7 +275,7 @@ fn setup(
         DirectionalLight {
             color: Color::WHITE,
             illuminance: 8000.0,
-            shadows_enabled: true,
+            shadow_maps_enabled: true,
             ..default()
         },
         Transform::from_xyz(5.0, 10.0, 5.0).looking_at(Vec3::ZERO, Vec3::Y),
@@ -509,7 +512,8 @@ fn ui_controls(
             }
         });
 
-    egui::TopBottomPanel::bottom("shortcuts").show(ctx, |ui| {
+    #[allow(deprecated)]
+    egui::Panel::bottom("shortcuts").show(ctx, |ui| {
         ui.with_layout(egui::Layout::top_down(egui::Align::Center), |ui| {
             ui.label(shortcuts_label());
         });

@@ -8,6 +8,17 @@ pub struct UiEvent {
     pub interaction_type: String,
 }
 
+/// Registers `UiEvent` so `EguiEventEmitter`'s `MessageWriter` validates on
+/// native builds too (analytics, which also registers it, is wasm-only).
+/// `add_message` is idempotent, so double-registration is harmless.
+pub struct EguiEventsPlugin;
+
+impl Plugin for EguiEventsPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_message::<UiEvent>();
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum InteractionType {
     DragStopped,
