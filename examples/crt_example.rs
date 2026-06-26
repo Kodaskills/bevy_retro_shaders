@@ -7,7 +7,7 @@ use bevy::{
 };
 use bevy_egui::{egui, EguiPlugin, EguiPrimaryContextPass};
 use bevy_retro_shaders::{CrtGlitch, CrtPlugin, CrtSettings};
-use egui_events::{EguiEventEmitter, InteractionType};
+use egui_events::{EguiEventEmitter, EguiEventsPlugin, InteractionType};
 use serde::Serialize;
 
 #[cfg(target_arch = "wasm32")]
@@ -287,7 +287,8 @@ fn run_app() {
 
     app.add_plugins(EguiPlugin::default())
         .add_plugins(CrtPlugin)
-        .add_plugins(EguiAfterCrtPlugin);
+        .add_plugins(EguiAfterCrtPlugin)
+        .add_plugins(EguiEventsPlugin);
     #[cfg(target_arch = "wasm32")]
     app.add_plugins(analytics::AnalyticsPlugin);
     app.add_systems(Startup, setup_scene)
