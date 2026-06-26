@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.0](https://github.com/Kodaskills/bevy_retro_shaders/compare/bevy_retro_shaders-v0.1.1...bevy_retro_shaders-v0.2.0) (2026-06-26)
+
+
+### Features
+
+* **bevy:** ⬆️  upgraded bevy to 0.19 and bevy_egui to 0.40.1 ([7651e53](https://github.com/Kodaskills/bevy_retro_shaders/commit/7651e534a5def8d6cea162eb52437de7e8d5501c))
+
 ## [0.1.1](https://github.com/Kodaskills/bevy_retro_shaders/compare/bevy_retro_shaders-v0.1.0...bevy_retro_shaders-v0.1.1) (2026-05-01)
 
 
