@@ -26,7 +26,7 @@ features = [ "derive" ]
 
 
 [dependencies.bevy_egui]
-version = "0.40.1"
+version = "0.41.0"
 optional = true
 
 
