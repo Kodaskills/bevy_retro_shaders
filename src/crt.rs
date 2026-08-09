@@ -28,7 +28,7 @@ use bevy::{
 
 /// Add to a Camera2d entity to enable the CRT effect.
 /// Glitch fields are updated automatically by `update_crt_glitch` if `CrtGlitch` is also present.
-#[derive(Component, Clone, Copy, ExtractComponent, ShaderType)]
+#[derive(Component, Clone, Copy, ExtractComponent, ShaderType, Reflect)]
 pub struct CrtSettings {
     /// Screen curvature: 0.0 = flat, ~0.1 = subtle CRT curve
     pub curvature: f32,
@@ -74,7 +74,7 @@ impl Default for CrtSettings {
 // ─── Glitch config (CPU only) ────────────────────────────────────────────────
 
 /// Controls glitch timing and which effects fire. Attach alongside `CrtSettings`.
-#[derive(Component)]
+#[derive(Component, Clone, Reflect)]
 pub struct CrtGlitch {
     /// Minimum seconds between glitches
     pub interval_min: f32,
